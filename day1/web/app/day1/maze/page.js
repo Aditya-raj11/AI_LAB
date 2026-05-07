@@ -125,8 +125,9 @@ const legendItems = [
    ═══════════════════════════════════════════ */
 export default function MazePage() {
   const [maze, setMaze] = useState(DEFAULT_MAZE.map(r => [...r]));
-  const [start] = useState([0, 0]);
-  const [goal] = useState([4, 4]);
+  const [start, setStart] = useState([0, 0]);
+  const [goal, setGoal] = useState([4, 4]);
+  const [placementMode, setPlacementMode] = useState(null); // null | 'start' | 'goal'
   const [algorithm, setAlgorithm] = useState("BFS");
   const [speed, setSpeed] = useState(200);
   const [running, setRunning] = useState(false);
@@ -172,6 +173,24 @@ export default function MazePage() {
 
   const toggleWall = useCallback((r, c) => {
     if (running) return;
+
+    // Placement mode: set start or goal
+    if (placementMode === 'start') {
+      if (maze[r][c] === 1) return; // can't place on a wall
+      setStart([r, c]);
+      setPlacementMode(null);
+      resetState();
+      return;
+    }
+    if (placementMode === 'goal') {
+      if (maze[r][c] === 1) return;
+      setGoal([r, c]);
+      setPlacementMode(null);
+      resetState();
+      return;
+    }
+
+    // Normal mode: toggle wall (but not on start/goal)
     if ((r === start[0] && c === start[1]) || (r === goal[0] && c === goal[1])) return;
     setMaze(prev => {
       const copy = prev.map(row => [...row]);
@@ -179,7 +198,7 @@ export default function MazePage() {
       return copy;
     });
     resetState();
-  }, [running, start, goal, resetState]);
+  }, [running, start, goal, maze, placementMode, resetState]);
 
   const advance = useCallback(() => {
     if (!traceRef.current) return;
@@ -237,21 +256,32 @@ export default function MazePage() {
   const loadSample = () => {
     if (running) return;
     setMaze(DEFAULT_MAZE.map(r => [...r]));
+    setStart([0, 0]);
+    setGoal([4, 4]);
+    setPlacementMode(null);
     resetState();
     setStatusMsg("Sample maze loaded");
   };
 
   const clearMaze = () => {
     if (running) return;
+    const rows = maze.length, cols = maze[0].length;
     setMaze(maze.map(r => r.map(() => 0)));
+    setStart([0, 0]);
+    setGoal([rows - 1, cols - 1]);
+    setPlacementMode(null);
     resetState();
     setStatusMsg("Maze cleared — click to add walls");
   };
 
   const genMaze = () => {
     if (running) return;
-    const { maze: m } = generateTreeMaze(9, 13);
+    const rows = 9, cols = 13;
+    const { maze: m } = generateTreeMaze(rows, cols);
     setMaze(m);
+    setStart([0, 0]);
+    setGoal([rows - 1, cols - 1]);
+    setPlacementMode(null);
     resetState();
     setStatusMsg("Tree maze generated!");
   };
@@ -312,6 +342,33 @@ export default function MazePage() {
 
         {/* Right Panel */}
         <div className={styles.panel}>
+          {/* Start / Goal Placement */}
+          <div className={styles.panelSection}>
+            <div className={styles.sectionLabel}>Start &amp; Goal</div>
+            <div className={styles.algRow}>
+              <button
+                className={`${styles.algBtn} ${placementMode === 'start' ? styles.algBtnActive : ''}`}
+                onClick={() => !running && setPlacementMode(placementMode === 'start' ? null : 'start')}
+                disabled={running}
+              >
+                📍 Set Start ({start[0]},{start[1]})
+              </button>
+              <button
+                className={`${styles.algBtn} ${placementMode === 'goal' ? styles.algBtnActive : ''}`}
+                onClick={() => !running && setPlacementMode(placementMode === 'goal' ? null : 'goal')}
+                disabled={running}
+              >
+                🎯 Set Goal ({goal[0]},{goal[1]})
+              </button>
+            </div>
+            {placementMode && (
+              <div className={styles.statusBar} style={{marginTop:'6px'}}>
+                <span className={styles.statusDot} style={{ background: placementMode === 'start' ? '#2563eb' : '#dc2626' }} />
+                <span className={styles.statusText}>Click a cell to place {placementMode}</span>
+              </div>
+            )}
+          </div>
+
           {/* Algorithm */}
           <div className={styles.panelSection}>
             <div className={styles.sectionLabel}>Algorithm</div>
