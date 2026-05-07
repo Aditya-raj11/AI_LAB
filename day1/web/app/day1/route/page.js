@@ -109,6 +109,7 @@ export default function RoutePage() {
   const [startNode, setStartNode] = useState("A");
   const [goalNode, setGoalNode] = useState("F");
   const [running, setRunning] = useState(false);
+  const [touchMode, setTouchMode] = useState("move"); // 'move' | 'connect' | 'edit'
   const [frontVisited, setFrontVisited] = useState(new Set());
   const [backVisited, setBackVisited] = useState(new Set());
   const [finalPath, setFinalPath] = useState([]);
@@ -264,29 +265,73 @@ export default function RoutePage() {
     }
   };
 
-  const handleMouseDown = (e) => {
-    if (running) return;
+  // Helper: get pointer coords from mouse or touch event
+  const getPointerXY = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return [clientX - rect.left, clientY - rect.top, rect];
+  };
 
-    if (e.button === 2) { // Right click — edge draw
-      const node = nodeAtPoint(x, y);
+  const getPointerXYEnd = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    return [clientX - rect.left, clientY - rect.top, rect];
+  };
+
+  // Determine effective mode: on desktop, right-click forces connect, dblclick forces edit
+  const getEffectiveMode = (e) => {
+    if (e.button === 2) return 'connect';
+    return touchMode;
+  };
+
+  const handlePointerDown = (e) => {
+    if (running) return;
+    if (e.touches) e.preventDefault(); // prevent scroll on touch
+    const [x, y] = getPointerXY(e);
+    const mode = getEffectiveMode(e);
+    const node = nodeAtPoint(x, y);
+
+    if (mode === 'connect') {
       if (node) {
         edgeRef.current = { node, startX: positions[node][0], startY: positions[node][1], endX: x, endY: y, line: true };
       }
       return;
     }
 
-    const node = nodeAtPoint(x, y);
+    if (mode === 'edit') {
+      // Tap on node = remove, tap on empty = add
+      if (node) {
+        setGraph(prev => {
+          const g = JSON.parse(JSON.stringify(prev));
+          for (const neigh of (g[node] || [])) { g[neigh] = g[neigh].filter(n => n !== node); }
+          delete g[node];
+          return g;
+        });
+        setPositions(prev => { const p = { ...prev }; delete p[node]; return p; });
+        if (startNode === node) setStartNode(Object.keys(graph).filter(n => n !== node).sort()[0] || "");
+        if (goalNode === node) setGoalNode(Object.keys(graph).filter(n => n !== node).sort().pop() || "");
+        setStatusMsg(`Removed node ${node}.`);
+      } else {
+        const name = nextNodeName();
+        setGraph(prev => ({ ...prev, [name]: [] }));
+        setPositions(prev => ({ ...prev, [name]: [x, y] }));
+        setStatusMsg(`Added node ${name}.`);
+      }
+      return;
+    }
+
+    // mode === 'move'
     if (node) {
       dragRef.current = { node, offsetX: positions[node][0] - x, offsetY: positions[node][1] - y };
     }
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
     if (running) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    if (e.touches) e.preventDefault();
+    const [x, y, rect] = getPointerXY(e);
 
     if (edgeRef.current?.line) {
       edgeRef.current.endX = x;
@@ -302,10 +347,9 @@ export default function RoutePage() {
     }
   };
 
-  const handleMouseUp = (e) => {
+  const handlePointerUp = (e) => {
     if (running) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const [x, y] = getPointerXYEnd(e);
 
     if (edgeRef.current?.line) {
       const target = nodeAtPoint(x, y);
@@ -336,10 +380,10 @@ export default function RoutePage() {
     }
   };
 
+  // Keep double-click for desktop convenience
   const handleDblClick = (e) => {
     if (running) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const [x, y] = getPointerXY(e);
     const node = nodeAtPoint(x, y);
     if (node) {
       setGraph(prev => {
@@ -353,7 +397,6 @@ export default function RoutePage() {
       if (goalNode === node) setGoalNode(Object.keys(graph).filter(n => n !== node).sort().pop() || "");
       setStatusMsg(`Removed node ${node}.`);
     } else {
-      // Add node on empty space
       const name = nextNodeName();
       setGraph(prev => ({ ...prev, [name]: [] }));
       setPositions(prev => ({ ...prev, [name]: [x, y] }));
@@ -362,6 +405,12 @@ export default function RoutePage() {
   };
 
   const handleContextMenu = (e) => e.preventDefault();
+
+  const modeHints = {
+    move: '✋ Drag nodes to reposition them',
+    connect: '🔗 Drag between two nodes to connect/disconnect',
+    edit: '✏️ Tap empty space to add · Tap node to remove',
+  };
 
   // ─── Search ───
   const resetState = (msg) => {
@@ -483,19 +532,39 @@ export default function RoutePage() {
           <canvas
             ref={canvasRef}
             className={styles.graphCanvas}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
             onDoubleClick={handleDblClick}
             onContextMenu={handleContextMenu}
           />
           <div className={styles.canvasLegend}>
             Front: blue · Back: pink · Meeting: green · Route: gold<br/>
-            Double-click: add/remove node · Right-drag: connect/disconnect
+            {modeHints[touchMode]}
           </div>
         </div>
 
         <div className={styles.panel}>
+          {/* Interaction Mode */}
+          <div className={styles.panelSection}>
+            <div className={styles.sectionLabel}>Touch Mode</div>
+            <div className={styles.modeRow}>
+              {[{id:'move', label:'✋ Move', icon:'✋'}, {id:'connect', label:'🔗 Connect', icon:'🔗'}, {id:'edit', label:'✏️ Edit', icon:'✏️'}].map(m => (
+                <button
+                  key={m.id}
+                  className={`${styles.modeBtn} ${touchMode === m.id ? styles.modeBtnActive : ''}`}
+                  onClick={() => setTouchMode(m.id)}
+                  disabled={running}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Controls */}
           <div className={styles.panelSection}>
             <div className={styles.sectionLabel}>Controls</div>

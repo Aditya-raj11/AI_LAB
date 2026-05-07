@@ -49,6 +49,7 @@
 .graphCanvas {
   flex: 1;
   cursor: crosshair;
+  touch-action: none;
 }
 
 .canvasLegend {
@@ -62,6 +63,40 @@
   border-radius: var(--radius-sm);
   backdrop-filter: blur(10px);
   line-height: 1.6;
+}
+
+/* ─── Mode Toggle ─── */
+.modeRow {
+  display: flex;
+  gap: 4px;
+}
+
+.modeBtn {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: center;
+  white-space: nowrap;
+}
+.modeBtn:hover {
+  border-color: var(--border-light);
+  color: var(--text);
+}
+.modeBtnActive {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: white;
+}
+.modeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ─── Panel ─── */
