@@ -1,0 +1,28 @@
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/.vercel/
+web/.env*
+
+# Python caches and virtualenvs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+env/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
