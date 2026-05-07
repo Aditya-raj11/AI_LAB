@@ -81,16 +81,31 @@ function* bidirectionalTrace(graph, start, goal) {
    DEFAULT GRAPH
    ═══════════════════════════════════════════ */
 const DEFAULT_GRAPH = { A:["B","C"], B:["A","D","E"], C:["A","F"], D:["B"], E:["B","F"], F:["C","E"] };
-const DEFAULT_POS = { A:[160,140], B:[340,100], C:[340,230], D:[520,100], E:[520,230], F:[690,165] };
+const DEFAULT_POS = { A:[0.19,0.42], B:[0.40,0.30], C:[0.40,0.69], D:[0.61,0.30], E:[0.61,0.69], F:[0.81,0.50] };
 
 const NODE_R = 28;
+
+// Scale normalized positions (0-1) to actual canvas pixel coordinates
+function scalePositions(normalizedPos, w, h) {
+  const pad = NODE_R + 10;
+  const result = {};
+  for (const [node, [nx, ny]] of Object.entries(normalizedPos)) {
+    result[node] = [
+      pad + nx * (w - pad * 2),
+      pad + ny * (h - pad * 2),
+    ];
+  }
+  return result;
+}
 
 /* ═══════════════════════════════════════════
    COMPONENT
    ═══════════════════════════════════════════ */
 export default function RoutePage() {
   const [graph, setGraph] = useState(() => JSON.parse(JSON.stringify(DEFAULT_GRAPH)));
-  const [positions, setPositions] = useState(() => JSON.parse(JSON.stringify(DEFAULT_POS)));
+  const [positions, setPositions] = useState({});
+  const prevSizeRef = useRef({ w: 0, h: 0 });
+  const initializedRef = useRef(false);
   const [startNode, setStartNode] = useState("A");
   const [goalNode, setGoalNode] = useState("F");
   const [running, setRunning] = useState(false);
@@ -186,11 +201,45 @@ export default function RoutePage() {
     }
   }, [graph, positions, startNode, goalNode, frontVisited, backVisited, finalPath, meetingNode]);
 
+  // Initialize positions once canvas is available
+  useEffect(() => {
+    if (initializedRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      const scaled = scalePositions(DEFAULT_POS, rect.width, rect.height);
+      setPositions(scaled);
+      prevSizeRef.current = { w: rect.width, h: rect.height };
+      initializedRef.current = true;
+    }
+  });
+
   useEffect(() => { drawGraph(); }, [drawGraph]);
 
-  // Resize
+  // Resize — rescale all node positions proportionally
   useEffect(() => {
-    const resize = () => drawGraph();
+    const resize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const newW = rect.width, newH = rect.height;
+      const { w: oldW, h: oldH } = prevSizeRef.current;
+      if (oldW > 0 && oldH > 0 && (Math.abs(newW - oldW) > 5 || Math.abs(newH - oldH) > 5)) {
+        setPositions(prev => {
+          const scaled = {};
+          for (const [node, [x, y]] of Object.entries(prev)) {
+            scaled[node] = [
+              Math.max(NODE_R, Math.min(newW - NODE_R, (x / oldW) * newW)),
+              Math.max(NODE_R, Math.min(newH - NODE_R, (y / oldH) * newH)),
+            ];
+          }
+          return scaled;
+        });
+        prevSizeRef.current = { w: newW, h: newH };
+      }
+      drawGraph();
+    };
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, [drawGraph]);
@@ -375,7 +424,10 @@ export default function RoutePage() {
   const loadSample = () => {
     if (running) return;
     setGraph(JSON.parse(JSON.stringify(DEFAULT_GRAPH)));
-    setPositions(JSON.parse(JSON.stringify(DEFAULT_POS)));
+    const rect = canvasRef.current?.getBoundingClientRect();
+    const w = rect?.width || 700, h = rect?.height || 400;
+    setPositions(scalePositions(DEFAULT_POS, w, h));
+    prevSizeRef.current = { w, h };
     setStartNode("A"); setGoalNode("F");
     resetState("Sample graph loaded.");
   };
@@ -404,6 +456,7 @@ export default function RoutePage() {
       }
     }
     setGraph(g); setPositions(p);
+    prevSizeRef.current = { w, h };
     setStartNode(names[0]); setGoalNode(names[names.length-1]);
     resetState("Random graph generated.");
   };
