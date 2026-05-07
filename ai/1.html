@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probabilistic AI — Bayesian & Markov Models</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Code+Pro:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#ffffff; --ink:#111111; --muted:#555555; --rule:#dddddd;
+    --accent1:#1a3a6b; --accent2:#c0392b; --accent3:#16a085;
+    --accent4:#8e44ad; --accent5:#d35400;
+    --light1:#eaf0fb; --light2:#fdecea; --light3:#e8f8f5;
+    --light4:#f5eef8; --light5:#fef5ec; --code-bg:#f4f4f4;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--ink);line-height:1.78;font-size:16px}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:2px solid var(--ink);
+      display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:56px}
+  .nav-brand{font-family:'Playfair Display',serif;font-weight:900;font-size:1.1rem;color:var(--accent1)}
+  .nav-links{display:flex;gap:1.4rem;list-style:none}
+  .nav-links a{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+               color:var(--muted);text-decoration:none;transition:color .2s}
+  .nav-links a:hover{color:var(--accent1)}
+
+  /* HERO */
+  .hero{border-bottom:2px solid var(--ink);padding:5rem 4rem 4rem;position:relative;overflow:hidden}
+  .hero-tag{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent2);margin-bottom:1rem}
+  .hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:900;
+           line-height:1.05;color:var(--ink);max-width:820px}
+  .hero h1 span{color:var(--accent1)}
+  .hero-sub{margin-top:1.5rem;font-size:1.05rem;color:var(--muted);max-width:580px}
+  .hero-meta{margin-top:2.5rem;display:flex;gap:2rem;font-size:.8rem;font-weight:700;
+             letter-spacing:.05em;color:var(--muted);flex-wrap:wrap}
+  .hero-deco{position:absolute;right:3rem;top:50%;transform:translateY(-50%);
+             width:280px;height:280px;opacity:.07;font-family:'Source Code Pro',monospace;
+             font-size:.65rem;color:var(--accent1);line-height:1.2;overflow:hidden;pointer-events:none}
+
+  /* SECTIONS */
+  .section{padding:4rem 4rem;border-bottom:1px solid var(--rule)}
+  .section:last-of-type{border-bottom:none}
+  .section-header{margin-bottom:2.5rem}
+  .section-num{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+  .section-title{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--ink);line-height:1.1}
+  .section-title.red{color:var(--accent2)}
+  .section-title.navy{color:var(--accent1)}
+  .section-title.teal{color:var(--accent3)}
+  .section-title.violet{color:var(--accent4)}
+  h3{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;margin:2rem 0 .75rem;color:var(--ink)}
+  h4{font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .5rem}
+  p{margin-bottom:1rem;color:#222}
+
+  /* DEFINITION BOX */
+  .defbox{border-left:4px solid var(--accent1);background:var(--light1);padding:1.25rem 1.5rem;
+          margin:1.5rem 0;border-radius:0 6px 6px 0}
+  .defbox.red{border-color:var(--accent2);background:var(--light2)}
+  .defbox.teal{border-color:var(--accent3);background:var(--light3)}
+  .defbox.violet{border-color:var(--accent4);background:var(--light4)}
+  .defbox.amber{border-color:var(--accent5);background:var(--light5)}
+  .defbox-label{font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+                color:var(--muted);margin-bottom:.4rem}
+
+  /* MATH */
+  .math-block{background:var(--code-bg);border:1px solid var(--rule);border-radius:6px;
+              padding:1.25rem 1.5rem;font-family:'Source Code Pro',monospace;font-size:1.05rem;
+              color:var(--accent1);margin:1.25rem 0;text-align:center;letter-spacing:.02em}
+  .math-block .formula{font-size:1.3rem;font-weight:600}
+  .math-block .explain{font-size:.8rem;color:var(--muted);margin-top:.5rem;font-family:'Lato',sans-serif}
+
+  /* GRID */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem}
+  @media(max-width:768px){
+    .two-col,.three-col{grid-template-columns:1fr}
+    nav{padding:0 1rem}.hero,.section{padding:2.5rem 1.5rem}
+  }
+
+  /* EXAMPLE CARDS */
+  .example-card{border:1.5px solid var(--rule);border-radius:8px;padding:1.75rem;margin:1.5rem 0;position:relative}
+  .example-badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.12em;
+                 text-transform:uppercase;padding:.2rem .6rem;border-radius:2px;margin-bottom:.75rem}
+  .badge-simple{background:#d5f5e3;color:#1e8449}
+  .badge-moderate{background:#fdebd0;color:#ca6f1e}
+  .badge-complex{background:#f5eef8;color:#7d3c98}
+
+  /* PROBABILITY TABLES — Primary styling */
+  .prob-table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.88rem}
+  .prob-table th{background:var(--accent1);color:#fff;padding:.55rem .85rem;text-align:center;font-family:'Source Code Pro',monospace}
+  .prob-table th.left{text-align:left}
+  .prob-table td{padding:.5rem .85rem;border-bottom:1px solid var(--rule);text-align:center;font-family:'Source Code Pro',monospace}
+  .prob-table td.label{text-align:left;font-family:'Lato',sans-serif;font-weight:700;color:var(--ink);background:#fafafa}
+  .prob-table tr:nth-child(even) td{background:#f5f7fb}
+  .prob-table tr:nth-child(even) td.label{background:#f0f0f0}
+  .prob-table .hi{color:var(--accent3);font-weight:700}   /* highlight high probability */
+  .prob-table .lo{color:var(--muted)}                     /* dim low probability */
+  .prob-table .mid{color:var(--accent5);font-weight:600}  /* medium probability */
+  .prob-table tr.result-row td{background:var(--light3);font-weight:700;color:var(--accent3)}
+  .prob-table tr.result-row-red td{background:var(--light2);font-weight:700;color:var(--accent2)}
+
+  /* TABLE CONTAINERS */
+  .table-wrap{margin:1.25rem 0}
+  .table-title{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+               color:var(--muted);margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
+  .table-title::before{content:'';display:inline-block;width:3px;height:14px;
+                       background:var(--accent1);border-radius:2px}
+  .table-caption{font-size:.78rem;color:var(--muted);font-style:italic;margin-top:.4rem;text-align:center}
+
+  /* Coloured table headers */
+  .prob-table.red th{background:var(--accent2)}
+  .prob-table.teal th{background:var(--accent3)}
+  .prob-table.violet th{background:var(--accent4)}
+  .prob-table.amber th{background:var(--accent5)}
+
+  /* DIAGRAM */
+  .diagram-wrap{margin:2rem 0;text-align:center}
+  .diagram-wrap svg{max-width:100%}
+  .diagram-caption{font-size:.78rem;color:var(--muted);margin-top:.5rem;font-style:italic}
+
+  /* INTERACTIVE */
+  .interactive-box{background:#f9f9f9;border:1.5px solid var(--rule);border-radius:8px;padding:2rem;margin:2rem 0}
+  .interactive-box h4{margin-top:0}
+  .slider-row{display:flex;align-items:center;gap:1rem;margin:.75rem 0}
+  .slider-row label{font-size:.85rem;min-width:210px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent1)}
+  .slider-row .val{font-family:'Source Code Pro',monospace;font-size:.9rem;min-width:50px;text-align:right;color:var(--accent1);font-weight:600}
+  .result-display{margin-top:1.25rem;background:var(--light1);border-radius:6px;padding:1rem 1.25rem;
+                  font-family:'Source Code Pro',monospace;font-size:1.05rem;color:var(--accent1);font-weight:700}
+  .btn{display:inline-block;margin-top:.75rem;padding:.5rem 1.25rem;border:2px solid var(--accent1);
+       border-radius:4px;background:var(--accent1);color:#fff;font-size:.8rem;font-weight:700;
+       letter-spacing:.05em;cursor:pointer;transition:all .2s}
+  .btn:hover{background:#fff;color:var(--accent1)}
+  .btn.red{border-color:var(--accent2);background:var(--accent2)}.btn.red:hover{background:#fff;color:var(--accent2)}
+  .btn.teal{border-color:var(--accent3);background:var(--accent3)}.btn.teal:hover{background:#fff;color:var(--accent3)}
+  .btn.violet{border-color:var(--accent4);background:var(--accent4)}.btn.violet:hover{background:#fff;color:var(--accent4)}
+  .btn.ghost{background:#fff;color:var(--accent1)}.btn.ghost:hover{background:var(--light1)}
+
+  /* SVG */
+  canvas{border:1px solid var(--rule);border-radius:6px;display:block;margin:0 auto}
+
+  /* TOC */
+  .toc{background:var(--light1);border:1.5px solid var(--rule);border-radius:8px;padding:1.5rem 2rem;margin-bottom:2rem}
+  .toc h4{margin-top:0;margin-bottom:.75rem;color:var(--accent1)}
+  .toc ol{padding-left:1.25rem}
+  .toc li{margin-bottom:.3rem}
+  .toc a{color:var(--accent1);text-decoration:none;font-size:.92rem}
+  .toc a:hover{text-decoration:underline}
+
+  /* CHIPS */
+  .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin:.75rem 0}
+  .chip{background:var(--light1);border:1px solid var(--rule);border-radius:20px;padding:.2rem .7rem;
+        font-size:.75rem;font-weight:700;color:var(--accent1)}
+
+  /* PROB BARS */
+  .prob-bar-wrap{margin:.5rem 0}
+  .prob-bar-label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.25rem}
+  .prob-bar{height:13px;background:var(--rule);border-radius:6px;overflow:hidden}
+  .prob-bar-fill{height:100%;border-radius:6px;transition:width .5s ease}
+
+  /* TIMELINE */
+  .timeline{border-left:3px solid var(--rule);padding-left:2rem;margin:1.5rem 0}
+  .timeline-step{position:relative;margin-bottom:1.5rem}
+  .timeline-step::before{content:'';position:absolute;left:-2.45rem;top:.3rem;width:14px;height:14px;
+    border-radius:50%;background:var(--accent1);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent1)}
+  .timeline-step h4{margin:0 0 .3rem;font-size:.8rem;color:var(--accent1)}
+
+  /* ANIMATIONS */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  .fade-in{animation:fadeUp .55s ease both}
+  .obs-track{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+  .obs-token{padding:4px 10px;border-radius:4px;font-family:'Source Code Pro',monospace;font-size:.85rem;
+             font-weight:600;background:var(--light3);color:var(--accent3);border:1px solid var(--accent3);transition:all .3s}
+  .obs-token.active{transform:scale(1.1)}
+
+  /* REFS */
+  .ref-list{list-style:none;counter-reset:ref}
+  .ref-list li{counter-increment:ref;display:flex;gap:.75rem;margin-bottom:.75rem;font-size:.88rem}
+  .ref-list li::before{content:"["counter(ref)"]";font-weight:700;color:var(--accent1);min-width:28px;
+                       font-family:'Source Code Pro',monospace}
+
+  /* NOTICE BOX */
+  .notice{background:#fffbea;border:1px solid #f0c040;border-radius:6px;padding:.85rem 1.1rem;
+          font-size:.85rem;margin:1rem 0;color:#7a5e00}
+
+  /* SECTION DIVIDER LABEL */
+  .sub-section-label{font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:#fff;background:var(--accent1);display:inline-block;padding:.2rem .7rem;border-radius:3px;margin-bottom:.6rem}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Probabilistic AI</div>
+  <ul class="nav-links">
+    <li><a href="#bayes">Bayes</a></li>
+    <li><a href="#bbn">Networks</a></li>
+    <li><a href="#markov">Markov</a></li>
+    <li><a href="#hmm">HMM</a></li>
+    <li><a href="#references">Refs</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">📚 B.Tech Computer Science · Artificial Intelligence · Probabilistic Reasoning</div>
+  <h1>Bayesian Reasoning<br>&amp; <span>Markov Models</span></h1>
+  <p class="hero-sub">A comprehensive, interactive guide to probabilistic inference, Bayesian Networks, Markov Chains, and Hidden Markov Models — with full probability tables, worked examples, animations, and interactive calculators.</p>
+  <div class="hero-meta">
+    <span>🎓 BTech CSE / AI</span>
+    <span>📊 Full Probability Tables</span>
+    <span>🧮 Interactive Calculators</span>
+    <span>⭐ Exam Ready</span>
+  </div>
+  <div class="hero-deco" id="heroDeco"></div>
+</div>
+
+<!-- TOC -->
+<div class="section" style="padding-bottom:2rem;">
+  <div class="toc">
+    <h4>📋 Table of Contents</h4>
+    <ol>
+      <li><a href="#bayes">Bayes' Theorem — Formula, Tables &amp; Interactive Calculator</a></li>
+      <li><a href="#bbn">Bayesian Belief Networks — CPTs, Inference Tables &amp; Examples</a></li>
+      <li><a href="#markov">Markov Models — Transition Tables, Stationary Distribution &amp; Examples</a></li>
+      <li><a href="#hmm">Hidden Markov Models — Emission Tables, Viterbi, Forward Algorithm</a></li>
+      <li><a href="#references">Academic References</a></li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 1 — BAYES' THEOREM
+══════════════════════════════════════════ -->
+<div class="section" id="bayes">
+  <div class="section-header">
+    <div class="section-num">Section 01</div>
+    <div class="section-title red">Bayes' Theorem</div>
+  </div>
+
+  <div class="defbox">
+    <div class="defbox-label">Definition</div>
+    <strong>Bayes' Theorem</strong> describes the probability of an event based on prior knowledge of conditions related to it. It is the foundation of Bayesian inference — updating beliefs when new evidence is observed.
+  </div>
+
+  <div class="math-block">
+    <div class="formula">P(A | B) = [ P(B | A) × P(A) ] / P(B)</div>
+    <div class="explain">P(A|B) = Posterior &nbsp;·&nbsp; P(B|A) = Likelihood &nbsp;·&nbsp; P(A) = Prior &nbsp;·&nbsp; P(B) = Evidence (Marginal Probability)</div>
+  </div>
+
+  <div class="three-col" style="margin:1.5rem 0;">
+    <div class="defbox" style="margin:0">
+      <div class="defbox-label">Prior — P(A)</div>
+      Our belief about A <em>before</em> observing B. Represents domain knowledge.
+    </div>
+    <div class="defbox red" style="margin:0">
+      <div class="defbox-label">Likelihood — P(B|A)</div>
+      How probable is evidence B if A is true? Comes from data or domain knowledge.
+    </div>
+    <div class="defbox teal" style="margin:0">
+      <div class="defbox-label">Posterior — P(A|B)</div>
+      Updated belief about A <em>after</em> observing B. This is the final answer.
+    </div>
+  </div>
+
+  <div class="math-block">
+    <div class="formula" style="font-size:1.1rem;">P(B) = P(B|A)·P(A) + P(B|¬A)·P(¬A) &nbsp;&nbsp; [Total Probability]</div>
+    <div class="explain">Denominator ensures the posterior is a proper probability (sums to 1)</div>
+  </div>
+
+  <!-- ── EXAMPLE 1: Simple — Medical Test ── -->
+  <div class="example-card">
+    <span class="example-badge badge-simple">Simple Example</span>
+    <h3 style="margin-top:0">Medical Disease Detection</h3>
+    <p>A rare disease affects <strong>1% of the population</strong>. A diagnostic test has sensitivity 99% and specificity 95%.</p>
+
+    <div class="two-col">
+      <div>
+        <!-- Given data table -->
+        <div class="table-wrap">
+          <div class="table-title">Given Data</div>
+          <table class="prob-table">
+            <tr><th class="left">Parameter</th><th>Symbol</th><th>Value</th></tr>
+            <tr><td class="label">Disease prevalence (Prior)</td><td>P(D)</td><td>0.01</td></tr>
+            <tr><td class="label">No disease (Prior)</td><td>P(¬D)</td><td>0.99</td></tr>
+            <tr><td class="label">Sensitivity — P(+|Disease)</td><td>P(T⁺|D)</td><td class="hi">0.99</td></tr>
+            <tr><td class="label">False Positive — P(+|No Disease)</td><td>P(T⁺|¬D)</td><td class="mid">0.05</td></tr>
+            <tr><td class="label">Specificity — P(−|No Disease)</td><td>P(T⁻|¬D)</td><td class="hi">0.95</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <!-- Contingency table for 10,000 people -->
+        <div class="table-wrap">
+          <div class="table-title">Contingency Table (per 10,000 people)</div>
+          <table class="prob-table red">
+            <tr><th class="left">Outcome</th><th>Test +ve</th><th>Test −ve</th><th>Total</th></tr>
+            <tr><td class="label">Has Disease</td><td class="hi">99</td><td class="lo">1</td><td>100</td></tr>
+            <tr><td class="label">No Disease</td><td class="mid">495</td><td class="hi">9405</td><td>9900</td></tr>
+            <tr><td class="label"><strong>Total</strong></td><td><strong>594</strong></td><td><strong>9406</strong></td><td><strong>10000</strong></td></tr>
+          </table>
+          <div class="table-caption">Out of 594 positive tests, only 99 actually have the disease</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-step">
+        <h4>Step 1 — Compute P(T⁺) using Total Probability</h4>
+        <p>P(T⁺) = P(T⁺|D)·P(D) + P(T⁺|¬D)·P(¬D) = (0.99)(0.01) + (0.05)(0.99) = 0.0099 + 0.0495 = <strong>0.0594</strong></p>
+      </div>
+      <div class="timeline-step">
+        <h4>Step 2 — Apply Bayes' Theorem</h4>
+        <div class="math-block" style="text-align:left;font-size:.95rem;">
+          P(D|T⁺) = P(T⁺|D)·P(D) / P(T⁺) = (0.99 × 0.01) / 0.0594 ≈ <strong>0.1667 ≈ 16.67%</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results summary table -->
+    <div class="table-wrap">
+      <div class="table-title">Posterior Probabilities — After Positive Test</div>
+      <table class="prob-table teal">
+        <tr><th class="left">Hypothesis</th><th>Prior P(H)</th><th>Likelihood P(T⁺|H)</th><th>Joint P(T⁺,H)</th><th>Posterior P(H|T⁺)</th></tr>
+        <tr><td class="label">Has Disease (D)</td><td>0.0100</td><td class="hi">0.9900</td><td>0.0099</td><td class="hi">16.67%</td></tr>
+        <tr><td class="label">No Disease (¬D)</td><td>0.9900</td><td class="lo">0.0500</td><td>0.0495</td><td class="mid">83.33%</td></tr>
+        <tr class="result-row"><td class="label">Total (Normalisation)</td><td>1.0000</td><td>—</td><td class="hi">0.0594</td><td class="hi">100%</td></tr>
+      </table>
+      <div class="table-caption">Base Rate Fallacy: Even with a 99% sensitive test, a positive result only means ~17% chance of disease when the disease is rare!</div>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <div class="prob-bar-wrap">
+        <div class="prob-bar-label"><span>P(Disease | Positive Test)</span><span style="color:var(--accent2)">16.7%</span></div>
+        <div class="prob-bar"><div class="prob-bar-fill" style="width:16.7%;background:var(--accent2)"></div></div>
+      </div>
+      <div class="prob-bar-wrap">
+        <div class="prob-bar-label"><span>P(No Disease | Positive Test)</span><span style="color:var(--accent3)">83.3%</span></div>
+        <div class="prob-bar"><div class="prob-bar-fill" style="width:83.3%;background:var(--accent3)"></div></div>
+      </div>
+    </div>
+
+    <div class="notice">💡 <strong>Base Rate Fallacy:</strong> When a condition is rare (low prior), even a highly accurate test yields many false positives relative to true positives. Doctors and AI systems must account for this!</div>
+  </div>
+
+  <!-- ── EXAMPLE 2: Moderate — Naïve Bayes ── -->
+  <div class="example-card">
+    <span class="example-badge badge-moderate">Moderate Example</span>
+    <h3 style="margin-top:0">Naïve Bayes Spam Email Classifier</h3>
+    <p>Classifies emails as Spam or Ham (Not Spam) based on word frequencies from training data.</p>
+    <p><strong>Naïve Bayes Assumption:</strong> Features (words) are conditionally independent given the class.</p>
+
+    <div class="math-block">
+      <div class="formula" style="font-size:1rem;">P(Class|Words) ∝ P(Class) × ∏ᵢ P(wordᵢ|Class)</div>
+      <div class="explain">Proportional to — we then normalise to get actual probabilities</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Class Priors (from Training Data)</div>
+          <table class="prob-table">
+            <tr><th class="left">Class</th><th>Count</th><th>Prior P(Class)</th></tr>
+            <tr><td class="label">📧 Spam</td><td>400</td><td class="mid">0.40</td></tr>
+            <tr><td class="label">📨 Ham</td><td>600</td><td class="hi">0.60</td></tr>
+            <tr class="result-row"><td class="label">Total</td><td>1000</td><td>1.00</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Word Likelihood Table — P(word | Class)</div>
+          <table class="prob-table amber">
+            <tr><th class="left">Word</th><th>P(word|Spam)</th><th>P(word|Ham)</th></tr>
+            <tr><td class="label">"free"</td><td class="hi">0.80</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">"offer"</td><td class="hi">0.70</td><td class="lo">0.20</td></tr>
+            <tr><td class="label">"win"</td><td class="hi">0.65</td><td class="lo">0.05</td></tr>
+            <tr><td class="label">"click"</td><td class="hi">0.60</td><td class="lo">0.08</td></tr>
+            <tr><td class="label">"meeting"</td><td class="lo">0.05</td><td class="hi">0.60</td></tr>
+            <tr><td class="label">"project"</td><td class="lo">0.03</td><td class="hi">0.55</td></tr>
+            <tr><td class="label">"report"</td><td class="lo">0.04</td><td class="hi">0.50</td></tr>
+            <tr><td class="label">"deadline"</td><td class="lo">0.06</td><td class="hi">0.45</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h4>Case A — Email contains: "free", "offer"</h4>
+    <div class="table-wrap">
+      <div class="table-title">Calculation Table — Case A</div>
+      <table class="prob-table">
+        <tr><th class="left">Step</th><th>Spam</th><th>Ham</th></tr>
+        <tr><td class="label">Prior P(Class)</td><td>0.4000</td><td>0.6000</td></tr>
+        <tr><td class="label">× P("free" | Class)</td><td class="hi">0.8000</td><td class="lo">0.1000</td></tr>
+        <tr><td class="label">× P("offer" | Class)</td><td class="hi">0.7000</td><td class="lo">0.2000</td></tr>
+        <tr><td class="label">= Unnormalised Score</td><td class="hi">0.2240</td><td class="lo">0.0120</td></tr>
+        <tr><td class="label">÷ Total (0.236)</td><td>—</td><td>—</td></tr>
+        <tr class="result-row"><td class="label">= Posterior P(Class | email)</td><td class="hi">94.9%</td><td class="lo">5.1%</td></tr>
+      </table>
+      <div class="table-caption">→ Classified as <strong>SPAM</strong> with 94.9% confidence</div>
+    </div>
+
+    <h4>Case B — Email contains: "meeting", "project"</h4>
+    <div class="table-wrap">
+      <div class="table-title">Calculation Table — Case B</div>
+      <table class="prob-table teal">
+        <tr><th class="left">Step</th><th>Spam</th><th>Ham</th></tr>
+        <tr><td class="label">Prior P(Class)</td><td>0.4000</td><td>0.6000</td></tr>
+        <tr><td class="label">× P("meeting" | Class)</td><td class="lo">0.0500</td><td class="hi">0.6000</td></tr>
+        <tr><td class="label">× P("project" | Class)</td><td class="lo">0.0300</td><td class="hi">0.5500</td></tr>
+        <tr><td class="label">= Unnormalised Score</td><td class="lo">0.0006</td><td class="hi">0.1980</td></tr>
+        <tr class="result-row"><td class="label">= Posterior P(Class | email)</td><td class="lo">0.3%</td><td class="hi">99.7%</td></tr>
+      </table>
+      <div class="table-caption">→ Classified as <strong>HAM</strong> with 99.7% confidence</div>
+    </div>
+  </div>
+
+  <!-- ── INTERACTIVE CALCULATOR ── -->
+  <div class="interactive-box">
+    <h4>🧮 Interactive Bayes' Theorem Calculator</h4>
+    <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem;">Adjust sliders to update all probability values in real time. Useful for exploring the base rate fallacy.</p>
+    <div class="slider-row">
+      <label>Prior P(A) — e.g., disease prevalence (%)</label>
+      <input type="range" id="pa" min="1" max="50" value="1" oninput="computeBayes()">
+      <span class="val" id="pa-val">0.01</span>
+    </div>
+    <div class="slider-row">
+      <label>Likelihood P(B|A) — Sensitivity (%)</label>
+      <input type="range" id="pba" min="50" max="99" value="99" oninput="computeBayes()">
+      <span class="val" id="pba-val">0.99</span>
+    </div>
+    <div class="slider-row">
+      <label>False Positive P(B|¬A) — 1−Specificity (%)</label>
+      <input type="range" id="pbna" min="1" max="30" value="5" oninput="computeBayes()">
+      <span class="val" id="pbna-val">0.05</span>
+    </div>
+    <div class="result-display" id="bayes-result">Posterior P(A|B) = —</div>
+    <div id="bayesDynTable" style="margin-top:1.25rem;"></div>
+    <canvas id="bayesCanvas" width="500" height="70" style="margin-top:1rem;width:100%;max-width:500px;"></canvas>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 2 — BAYESIAN BELIEF NETWORKS
+══════════════════════════════════════════ -->
+<div class="section" id="bbn">
+  <div class="section-header">
+    <div class="section-num">Section 02</div>
+    <div class="section-title navy">Bayesian / Belief Networks (BBN)</div>
+  </div>
+
+  <div class="defbox">
+    <div class="defbox-label">Definition</div>
+    A <strong>Bayesian Belief Network (BBN)</strong> is a Directed Acyclic Graph (DAG) where each node is a random variable with a <strong>Conditional Probability Table (CPT)</strong>. Edges encode direct probabilistic dependencies.
+  </div>
+
+  <div class="math-block">
+    <div class="formula">P(X₁, X₂, ..., Xₙ) = ∏ᵢ P(Xᵢ | Parents(Xᵢ))</div>
+    <div class="explain">Joint Distribution = Product of local conditional probabilities — exponentially more compact than full joint table</div>
+  </div>
+
+  <div class="notice">📌 <strong>CPT Size:</strong> A node with <em>k</em> binary parents needs 2ᵏ rows. A full joint table for <em>n</em> binary variables needs 2ⁿ rows. BBN saves memory through conditional independence.</div>
+
+  <!-- SIMPLE BBN -->
+  <div class="example-card">
+    <span class="example-badge badge-simple">Simple — 2 Nodes</span>
+    <h3 style="margin-top:0">Rain → Wet Grass</h3>
+    <p>A one-parent network: <em>Rain</em> directly causes <em>Wet Grass</em>.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 380 140" width="380" height="140" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1a3a6b"/></marker></defs>
+        <circle cx="90" cy="70" r="48" fill="#eaf0fb" stroke="#1a3a6b" stroke-width="2"/>
+        <text x="90" y="65" text-anchor="middle" font-family="Lato,sans-serif" font-size="14" font-weight="700" fill="#1a3a6b">Rain</text>
+        <text x="90" y="83" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="11" fill="#555">P=0.20</text>
+        <line x1="140" y1="70" x2="228" y2="70" stroke="#1a3a6b" stroke-width="2" marker-end="url(#a1)"/>
+        <text x="184" y="62" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="10" fill="#555">causes</text>
+        <circle cx="278" cy="70" r="48" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
+        <text x="278" y="61" text-anchor="middle" font-family="Lato,sans-serif" font-size="13" font-weight="700" fill="#16a085">Wet</text>
+        <text x="278" y="76" text-anchor="middle" font-family="Lato,sans-serif" font-size="13" font-weight="700" fill="#16a085">Grass</text>
+      </svg>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Prior Probability Table — Rain</div>
+          <table class="prob-table">
+            <tr><th class="left">Rain</th><th>Probability</th></tr>
+            <tr><td class="label">True (It rains)</td><td class="mid">0.20</td></tr>
+            <tr><td class="label">False (No rain)</td><td class="hi">0.80</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Wet Grass given Rain</div>
+          <table class="prob-table teal">
+            <tr><th class="left">Rain</th><th>P(Wet=True)</th><th>P(Wet=False)</th></tr>
+            <tr><td class="label">True ☔</td><td class="hi">0.90</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">False ☀️</td><td class="lo">0.20</td><td class="hi">0.80</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Marginal Probability — P(Wet Grass)</div>
+      <table class="prob-table">
+        <tr><th class="left">Rain State</th><th>P(Rain)</th><th>P(Wet|Rain)</th><th>Joint = P(Rain)×P(Wet|Rain)</th></tr>
+        <tr><td class="label">Rain = True</td><td>0.20</td><td>0.90</td><td>0.20 × 0.90 = <strong>0.180</strong></td></tr>
+        <tr><td class="label">Rain = False</td><td>0.80</td><td>0.20</td><td>0.80 × 0.20 = <strong>0.160</strong></td></tr>
+        <tr class="result-row"><td class="label">P(Wet Grass = True)</td><td>—</td><td>—</td><td><strong>0.340 (34%)</strong></td></tr>
+      </table>
+      <div class="table-caption">P(Wet Grass) = 0.18 + 0.16 = 0.34 — Marginalisation over Rain</div>
+    </div>
+  </div>
+
+  <!-- MODERATE BBN: Burglar Alarm -->
+  <div class="example-card">
+    <span class="example-badge badge-moderate">Moderate — Classic Alarm Network</span>
+    <h3 style="margin-top:0">Burglar Alarm Problem (Russell &amp; Norvig AIMA)</h3>
+    <p>5 binary variables: <strong>Burglary</strong>, <strong>Earthquake</strong>, <strong>Alarm</strong>, <strong>JohnCalls</strong>, <strong>MaryCalls</strong>.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 580 340" width="580" height="340" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#555"/></marker></defs>
+        <circle cx="160" cy="60" r="52" fill="#eaf0fb" stroke="#1a3a6b" stroke-width="2"/>
+        <text x="160" y="55" text-anchor="middle" font-family="Lato,sans-serif" font-size="13" font-weight="700" fill="#1a3a6b">Burglary</text>
+        <text x="160" y="72" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="11" fill="#555">P=0.001</text>
+        <circle cx="420" cy="60" r="52" fill="#fef5ec" stroke="#d35400" stroke-width="2"/>
+        <text x="420" y="55" text-anchor="middle" font-family="Lato,sans-serif" font-size="13" font-weight="700" fill="#d35400">Earthquake</text>
+        <text x="420" y="72" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="11" fill="#555">P=0.002</text>
+        <line x1="200" y1="95" x2="266" y2="147" stroke="#1a3a6b" stroke-width="2" marker-end="url(#a2)"/>
+        <line x1="380" y1="95" x2="314" y2="147" stroke="#d35400" stroke-width="2" marker-end="url(#a2)"/>
+        <circle cx="290" cy="190" r="52" fill="#f5eef8" stroke="#8e44ad" stroke-width="2"/>
+        <text x="290" y="185" text-anchor="middle" font-family="Lato,sans-serif" font-size="14" font-weight="700" fill="#8e44ad">Alarm</text>
+        <text x="290" y="202" text-anchor="middle" font-family="Source Code Pro,monospace" font-size="10" fill="#555">CPT(4 rows)</text>
+        <line x1="255" y1="233" x2="178" y2="278" stroke="#8e44ad" stroke-width="2" marker-end="url(#a2)"/>
+        <line x1="325" y1="233" x2="402" y2="278" stroke="#8e44ad" stroke-width="2" marker-end="url(#a2)"/>
+        <circle cx="150" cy="305" r="42" fill="#d5f5e3" stroke="#1e8449" stroke-width="2"/>
+        <text x="150" y="300" text-anchor="middle" font-family="Lato,sans-serif" font-size="12" font-weight="700" fill="#1e8449">John</text>
+        <text x="150" y="316" text-anchor="middle" font-family="Lato,sans-serif" font-size="12" font-weight="700" fill="#1e8449">Calls</text>
+        <circle cx="430" cy="305" r="42" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+        <text x="430" y="300" text-anchor="middle" font-family="Lato,sans-serif" font-size="12" font-weight="700" fill="#c0392b">Mary</text>
+        <text x="430" y="316" text-anchor="middle" font-family="Lato,sans-serif" font-size="12" font-weight="700" fill="#c0392b">Calls</text>
+      </svg>
+      <div class="diagram-caption">Fig: Burglar Alarm BBN — only 10 probability values needed vs 31 for full joint table (2⁵−1)</div>
+    </div>
+
+    <!-- All CPTs -->
+    <div class="three-col" style="margin-top:1.5rem;">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Burglary (Root)</div>
+          <table class="prob-table">
+            <tr><th class="left">Burglary</th><th>P(B)</th></tr>
+            <tr><td class="label">True</td><td class="lo">0.001</td></tr>
+            <tr><td class="label">False</td><td class="hi">0.999</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Earthquake (Root)</div>
+          <table class="prob-table amber">
+            <tr><th class="left">Earthquake</th><th>P(E)</th></tr>
+            <tr><td class="label">True</td><td class="lo">0.002</td></tr>
+            <tr><td class="label">False</td><td class="hi">0.998</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Alarm given B &amp; E</div>
+          <table class="prob-table violet">
+            <tr><th>Burglary</th><th>Earthquake</th><th>P(A=T)</th><th>P(A=F)</th></tr>
+            <tr><td>T</td><td>T</td><td class="hi">0.950</td><td class="lo">0.050</td></tr>
+            <tr><td>T</td><td>F</td><td class="hi">0.940</td><td class="lo">0.060</td></tr>
+            <tr><td>F</td><td>T</td><td class="mid">0.290</td><td class="mid">0.710</td></tr>
+            <tr><td>F</td><td>F</td><td class="lo">0.001</td><td class="hi">0.999</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — JohnCalls given Alarm</div>
+          <table class="prob-table teal">
+            <tr><th class="left">Alarm</th><th>P(J=T)</th><th>P(J=F)</th></tr>
+            <tr><td class="label">True</td><td class="hi">0.90</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">False</td><td class="lo">0.05</td><td class="hi">0.95</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — MaryCalls given Alarm</div>
+          <table class="prob-table red">
+            <tr><th class="left">Alarm</th><th>P(M=T)</th><th>P(M=F)</th></tr>
+            <tr><td class="label">True</td><td class="hi">0.70</td><td class="lo">0.30</td></tr>
+            <tr><td class="label">False</td><td class="lo">0.01</td><td class="hi">0.99</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inference query -->
+    <div class="table-wrap" style="margin-top:1.5rem;">
+      <div class="table-title">Inference Query — P(Burglary | JohnCalls=T, MaryCalls=T)</div>
+      <table class="prob-table">
+        <tr><th class="left">Burglary</th><th>Unnormalised P(B, J=T, M=T)</th><th>Normalised Posterior</th></tr>
+        <tr><td class="label">True</td><td>≈ 0.000628</td><td class="hi"><strong>28.4%</strong></td></tr>
+        <tr><td class="label">False</td><td>≈ 0.001586</td><td class="mid"><strong>71.6%</strong></td></tr>
+        <tr class="result-row"><td class="label">Normalisation constant</td><td>0.002214</td><td>100%</td></tr>
+      </table>
+      <div class="table-caption">Even when both John and Mary call, there is only ~28% chance of a burglary (both could be reacting to the earthquake)</div>
+    </div>
+  </div>
+
+  <!-- COMPLEX BBN: Student -->
+  <div class="example-card">
+    <span class="example-badge badge-complex">Complex — Student Grade Network</span>
+    <h3 style="margin-top:0">Academic Performance BBN (Koller &amp; Friedman)</h3>
+    <p>6 nodes modelling how <em>Difficulty</em> and <em>Intelligence</em> affect <em>Grade</em>, <em>SAT Score</em>, <em>Recommendation Letter</em>, and ultimately <em>Job Offer</em>.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 620 370" width="620" height="370" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#555"/></marker></defs>
+        <ellipse cx="120" cy="60" rx="62" ry="36" fill="#eaf0fb" stroke="#1a3a6b" stroke-width="2"/>
+        <text x="120" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1a3a6b" font-family="Lato,sans-serif">Difficulty</text>
+        <text x="120" y="72" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">P(D=hard)=0.4</text>
+        <ellipse cx="370" cy="60" rx="68" ry="36" fill="#fef5ec" stroke="#d35400" stroke-width="2"/>
+        <text x="370" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#d35400" font-family="Lato,sans-serif">Intelligence</text>
+        <text x="370" y="72" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">P(I=high)=0.3</text>
+        <ellipse cx="200" cy="185" rx="58" ry="36" fill="#f5eef8" stroke="#8e44ad" stroke-width="2"/>
+        <text x="200" y="181" text-anchor="middle" font-size="13" font-weight="700" fill="#8e44ad" font-family="Lato,sans-serif">Grade</text>
+        <text x="200" y="197" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">CPT(6 rows)</text>
+        <ellipse cx="450" cy="185" rx="58" ry="36" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
+        <text x="450" y="181" text-anchor="middle" font-size="13" font-weight="700" fill="#16a085" font-family="Lato,sans-serif">SAT Score</text>
+        <text x="450" y="197" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">CPT(2 rows)</text>
+        <ellipse cx="130" cy="310" rx="62" ry="36" fill="#d5f5e3" stroke="#1e8449" stroke-width="2"/>
+        <text x="130" y="306" text-anchor="middle" font-size="12" font-weight="700" fill="#1e8449" font-family="Lato,sans-serif">Rec Letter</text>
+        <text x="130" y="322" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">CPT(3 rows)</text>
+        <ellipse cx="390" cy="310" rx="58" ry="36" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+        <text x="390" y="306" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b" font-family="Lato,sans-serif">Job Offer</text>
+        <text x="390" y="322" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">CPT(12 rows)</text>
+        <line x1="165" y1="82" x2="188" y2="152" stroke="#1a3a6b" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="324" y1="82" x2="228" y2="152" stroke="#d35400" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="393" y1="82" x2="434" y2="151" stroke="#d35400" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="175" y1="218" x2="148" y2="277" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="228" y1="216" x2="344" y2="280" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="438" y1="218" x2="415" y2="277" stroke="#16a085" stroke-width="1.8" marker-end="url(#a3)"/>
+        <line x1="190" y1="312" x2="332" y2="312" stroke="#1e8449" stroke-width="1.8" marker-end="url(#a3)"/>
+      </svg>
+      <div class="diagram-caption">Fig: Student Grade BBN — 6 nodes, compact representation of complex academic dynamics</div>
+    </div>
+
+    <!-- All CPTs for student network -->
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Grade given Difficulty &amp; Intelligence</div>
+          <table class="prob-table violet">
+            <tr><th>Difficulty</th><th>Intelligence</th><th>P(G=A)</th><th>P(G=B)</th><th>P(G=C)</th></tr>
+            <tr><td>Easy</td><td>High</td><td class="hi">0.60</td><td class="mid">0.30</td><td class="lo">0.10</td></tr>
+            <tr><td>Easy</td><td>Low</td><td class="mid">0.40</td><td class="mid">0.40</td><td class="lo">0.20</td></tr>
+            <tr><td>Hard</td><td>High</td><td class="mid">0.30</td><td class="mid">0.40</td><td class="lo">0.30</td></tr>
+            <tr><td>Hard</td><td>Low</td><td class="lo">0.05</td><td class="lo">0.25</td><td class="hi">0.70</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — SAT Score given Intelligence</div>
+          <table class="prob-table teal">
+            <tr><th class="left">Intelligence</th><th>P(SAT=High)</th><th>P(SAT=Low)</th></tr>
+            <tr><td class="label">High</td><td class="hi">0.80</td><td class="lo">0.20</td></tr>
+            <tr><td class="label">Low</td><td class="lo">0.20</td><td class="hi">0.80</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Rec Letter given Grade</div>
+          <table class="prob-table amber">
+            <tr><th class="left">Grade</th><th>P(Letter=Strong)</th><th>P(Letter=Weak)</th></tr>
+            <tr><td class="label">A</td><td class="hi">0.90</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">B</td><td class="mid">0.60</td><td class="mid">0.40</td></tr>
+            <tr><td class="label">C</td><td class="lo">0.10</td><td class="hi">0.90</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">CPT — Job Offer given Letter &amp; SAT</div>
+          <table class="prob-table red">
+            <tr><th>Letter</th><th>SAT</th><th>P(Job=Yes)</th><th>P(Job=No)</th></tr>
+            <tr><td>Strong</td><td>High</td><td class="hi">0.95</td><td class="lo">0.05</td></tr>
+            <tr><td>Strong</td><td>Low</td><td class="mid">0.65</td><td class="mid">0.35</td></tr>
+            <tr><td>Weak</td><td>High</td><td class="mid">0.50</td><td class="mid">0.50</td></tr>
+            <tr><td>Weak</td><td>Low</td><td class="lo">0.10</td><td class="hi">0.90</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Sample Inference Results</div>
+      <table class="prob-table">
+        <tr><th class="left">Query</th><th>Evidence</th><th>Result</th></tr>
+        <tr><td class="label">P(Job Offer = Yes)</td><td>None (prior)</td><td class="mid">≈ 43%</td></tr>
+        <tr><td class="label">P(Job Offer = Yes)</td><td>Grade = A</td><td class="hi">≈ 72%</td></tr>
+        <tr><td class="label">P(Job Offer = Yes)</td><td>SAT = High</td><td class="hi">≈ 68%</td></tr>
+        <tr><td class="label">P(Job Offer = Yes)</td><td>Grade = A, SAT = High</td><td class="hi">≈ 88%</td></tr>
+        <tr><td class="label">P(Intelligence = High)</td><td>Grade = A</td><td class="mid">≈ 56%</td></tr>
+        <tr class="result-row"><td class="label">P(Job Offer = Yes)</td><td>Grade = C, SAT = Low</td><td class="lo">≈ 9%</td></tr>
+      </table>
+      <div class="table-caption">Inference computed by variable elimination or belief propagation</div>
+    </div>
+  </div>
+
+  <h3>Types of Inference</h3>
+  <div class="three-col">
+    <div class="defbox" style="margin:0">
+      <div class="defbox-label">Predictive (Top-Down)</div>
+      Cause → Effect<br><em>P(JohnCalls | Burglary=T)</em><br>Given cause, predict observations.
+    </div>
+    <div class="defbox red" style="margin:0">
+      <div class="defbox-label">Diagnostic (Bottom-Up)</div>
+      Effect → Cause<br><em>P(Burglary | JohnCalls=T)</em><br>Given observations, infer cause.
+    </div>
+    <div class="defbox teal" style="margin:0">
+      <div class="defbox-label">Inter-Causal</div>
+      Explaining Away: Two causes compete for the same effect. Observing one reduces belief in the other.
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 3 — MARKOV MODELS
+══════════════════════════════════════════ -->
+<div class="section" id="markov">
+  <div class="section-header">
+    <div class="section-num">Section 03</div>
+    <div class="section-title teal">Markov Models</div>
+  </div>
+
+  <div class="defbox teal">
+    <div class="defbox-label">The Markov Property</div>
+    A stochastic process has the <strong>Markov Property</strong> if the next state depends <em>only on the current state</em>, not on the history.
+    <div class="math-block" style="margin-top:.75rem;text-align:left;background:#fff;">
+      <span style="font-family:'Source Code Pro',monospace;color:var(--accent3);">P(Xₜ₊₁ | X₁,...,Xₜ) = P(Xₜ₊₁ | Xₜ)</span>
+    </div>
+    <em>"The future is independent of the past, given the present."</em>
+  </div>
+
+  <h3>Key Components of a Markov Chain</h3>
+  <div class="two-col">
+    <div>
+      <h4>Formal Definition</h4>
+      <p>A Markov Chain is defined by: <strong>λ = (S, A, π)</strong></p>
+      <ul style="margin-left:1.25rem;margin-bottom:1rem;">
+        <li><strong>S</strong> = Finite set of states</li>
+        <li><strong>A</strong> = Transition probability matrix</li>
+        <li><strong>π</strong> = Initial state distribution</li>
+      </ul>
+      <h4>Constraints</h4>
+      <div class="math-block" style="text-align:left;font-size:.9rem;">
+        A[i][j] ≥ 0 &nbsp;&amp;&amp;&nbsp; Σⱼ A[i][j] = 1<br>
+        (Each row of A sums to 1)
+      </div>
+    </div>
+    <div>
+      <h4>State Evolution</h4>
+      <div class="math-block" style="font-size:.9rem;">
+        <div class="formula" style="font-size:1rem;">πₜ = π₀ · Aᵗ</div>
+        <div class="explain">State distribution at time t = initial × matrix power</div>
+      </div>
+      <h4>Stationary Distribution</h4>
+      <p>π* satisfies: <code>π* = π* · A</code><br>
+      Long-run fraction of time spent in each state.</p>
+    </div>
+  </div>
+
+  <!-- EXAMPLE 1: Weather -->
+  <div class="example-card">
+    <span class="example-badge badge-simple">Example 1 — Weather Markov Chain</span>
+    <h3 style="margin-top:0">Daily Weather Prediction</h3>
+    <p>States: <strong>Sunny (S)</strong> and <strong>Rainy (R)</strong>. Tomorrow's weather depends only on today's.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 420 195" width="420" height="195" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#555"/></marker></defs>
+        <circle cx="120" cy="105" r="65" fill="#fff9e6" stroke="#f39c12" stroke-width="2.5"/>
+        <text x="120" y="98" text-anchor="middle" font-size="26" font-family="Lato,sans-serif">☀️</text>
+        <text x="120" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#d4890a" font-family="Lato,sans-serif">Sunny</text>
+        <circle cx="300" cy="105" r="65" fill="#eaf0fb" stroke="#2980b9" stroke-width="2.5"/>
+        <text x="300" y="98" text-anchor="middle" font-size="26" font-family="Lato,sans-serif">🌧️</text>
+        <text x="300" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#2471a3" font-family="Lato,sans-serif">Rainy</text>
+        <path d="M 80,48 Q 50,12 120,15 Q 168,12 155,48" fill="none" stroke="#f39c12" stroke-width="2" marker-end="url(#a4)"/>
+        <text x="110" y="12" font-size="12" fill="#d4890a" font-family="Source Code Pro,monospace" font-weight="700">0.8</text>
+        <line x1="185" y1="105" x2="233" y2="105" stroke="#555" stroke-width="2" marker-end="url(#a4)"/>
+        <text x="209" y="97" text-anchor="middle" font-size="11" fill="#c0392b" font-family="Source Code Pro,monospace" font-weight="700">0.2</text>
+        <line x1="233" y1="120" x2="185" y2="120" stroke="#555" stroke-width="2" marker-end="url(#a4)"/>
+        <text x="209" y="140" text-anchor="middle" font-size="11" fill="#1e8449" font-family="Source Code Pro,monospace" font-weight="700">0.3</text>
+        <path d="M 340,48 Q 388,12 340,15 Q 292,12 265,48" fill="none" stroke="#2980b9" stroke-width="2" marker-end="url(#a4)"/>
+        <text x="335" y="12" font-size="12" fill="#2471a3" font-family="Source Code Pro,monospace" font-weight="700">0.7</text>
+      </svg>
+      <div class="diagram-caption">Fig: Weather Markov Chain Diagram</div>
+    </div>
+
+    <div class="three-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Initial Distribution π₀</div>
+          <table class="prob-table">
+            <tr><th class="left">State</th><th>π₀</th></tr>
+            <tr><td class="label">☀️ Sunny</td><td class="hi">1.00</td></tr>
+            <tr><td class="label">🌧️ Rainy</td><td class="lo">0.00</td></tr>
+          </table>
+          <div class="table-caption">(Start on a sunny day)</div>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Transition Matrix A</div>
+          <table class="prob-table teal">
+            <tr><th>From \ To</th><th>☀️</th><th>🌧️</th></tr>
+            <tr><td class="label">☀️ Sunny</td><td class="hi">0.8</td><td class="lo">0.2</td></tr>
+            <tr><td class="label">🌧️ Rainy</td><td class="mid">0.3</td><td class="hi">0.7</td></tr>
+          </table>
+          <div class="table-caption">Each row sums to 1.0</div>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">State Evolution Over Days</div>
+          <table class="prob-table">
+            <tr><th>Day (t)</th><th>P(Sunny)</th><th>P(Rainy)</th></tr>
+            <tr><td>0</td><td class="hi">1.000</td><td class="lo">0.000</td></tr>
+            <tr><td>1</td><td class="hi">0.800</td><td class="lo">0.200</td></tr>
+            <tr><td>2</td><td class="mid">0.700</td><td class="mid">0.300</td></tr>
+            <tr><td>3</td><td class="mid">0.650</td><td class="mid">0.350</td></tr>
+            <tr><td>5</td><td class="mid">0.625</td><td class="mid">0.375</td></tr>
+            <tr><td>∞</td><td class="hi">0.600</td><td class="mid">0.400</td></tr>
+          </table>
+          <div class="table-caption">Converges to stationary π*=[0.6, 0.4]</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculation of stationary distribution -->
+    <div class="table-wrap">
+      <div class="table-title">Stationary Distribution Calculation</div>
+      <table class="prob-table">
+        <tr><th class="left">Equation</th><th>Details</th></tr>
+        <tr><td class="label">π_S = π_S·0.8 + π_R·0.3</td><td>Detailed balance for Sunny</td></tr>
+        <tr><td class="label">π_R = π_S·0.2 + π_R·0.7</td><td>Detailed balance for Rainy</td></tr>
+        <tr><td class="label">π_S + π_R = 1</td><td>Normalisation constraint</td></tr>
+        <tr><td class="label">Solving: 0.2·π_S = 0.3·π_R</td><td>→ π_S/π_R = 3/2</td></tr>
+        <tr class="result-row"><td class="label">π* = [π_S, π_R]</td><td><strong>[0.60, 0.40]</strong> — Long-run: 60% sunny, 40% rainy</td></tr>
+      </table>
+    </div>
+
+    <!-- Multi-step probability table -->
+    <div class="table-wrap">
+      <div class="table-title">Multi-Step Transition Matrix A² (2-day forecast)</div>
+      <table class="prob-table">
+        <tr><th>Start \ After 2 days</th><th>P(☀️ Sunny)</th><th>P(🌧️ Rainy)</th></tr>
+        <tr><td class="label">Start: ☀️ Sunny</td><td class="hi">0.700</td><td class="mid">0.300</td></tr>
+        <tr><td class="label">Start: 🌧️ Rainy</td><td class="mid">0.450</td><td class="mid">0.550</td></tr>
+      </table>
+      <div class="table-caption">A² = A × A. If today is sunny, P(rainy in 2 days) = 0.30</div>
+    </div>
+
+    <!-- Interactive Simulator -->
+    <div class="interactive-box" style="margin-top:1.5rem;">
+      <h4>🎲 Interactive Weather Markov Simulator</h4>
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+        <div id="markovState" style="font-size:2rem;">☀️ Sunny</div>
+        <button class="btn teal" onclick="markovStep()">Next Day →</button>
+        <button class="btn ghost" onclick="markovReset()">Reset</button>
+        <button class="btn" onclick="markov100()" style="background:var(--accent5);border-color:var(--accent5);">Run 100 Steps</button>
+      </div>
+      <div id="markovHistory" style="font-family:'Source Code Pro',monospace;font-size:.85rem;margin-top:.75rem;color:var(--muted);max-height:55px;overflow-y:auto;"></div>
+      <div id="markovStats" style="margin-top:.75rem;font-size:.88rem;"></div>
+    </div>
+  </div>
+
+  <!-- EXAMPLE 2: PageRank -->
+  <div class="example-card">
+    <span class="example-badge badge-moderate">Example 2 — PageRank (Google)</span>
+    <h3 style="margin-top:0">Random Surfer Model — Web Navigation</h3>
+    <p>A user randomly clicks links on a 3-page website. The Markov chain's stationary distribution = page importance.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="diagram-wrap" style="margin:0">
+          <svg viewBox="0 0 310 250" width="310" height="250" xmlns="http://www.w3.org/2000/svg">
+            <defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#8e44ad"/></marker></defs>
+            <rect x="25" y="100" width="80" height="50" rx="6" fill="#eaf0fb" stroke="#1a3a6b" stroke-width="2"/>
+            <text x="65" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#1a3a6b" font-family="Lato,sans-serif">Page A</text>
+            <text x="65" y="138" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">→ B, C</text>
+            <rect x="115" y="20" width="80" height="50" rx="6" fill="#fef5ec" stroke="#d35400" stroke-width="2"/>
+            <text x="155" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#d35400" font-family="Lato,sans-serif">Page B</text>
+            <text x="155" y="58" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">→ A, C</text>
+            <rect x="205" y="100" width="80" height="50" rx="6" fill="#e8f8f5" stroke="#16a085" stroke-width="2"/>
+            <text x="245" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#16a085" font-family="Lato,sans-serif">Page C</text>
+            <text x="245" y="138" text-anchor="middle" font-size="10" fill="#555" font-family="Source Code Pro,monospace">→ A</text>
+            <line x1="105" y1="115" x2="113" y2="72" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a5)"/>
+            <text x="98" y="90" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">0.5</text>
+            <line x1="105" y1="133" x2="203" y2="133" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a5)"/>
+            <text x="155" y="148" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">0.5</text>
+            <line x1="155" y1="70" x2="107" y2="118" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a5)"/>
+            <text x="118" y="95" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">0.5</text>
+            <line x1="195" y1="68" x2="207" y2="100" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a5)"/>
+            <text x="210" y="85" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">0.5</text>
+            <line x1="205" y1="125" x2="107" y2="125" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#a5)"/>
+            <text x="155" y="115" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">1.0</text>
+            <text x="65" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#1a3a6b" font-family="Lato,sans-serif">PR=0.40</text>
+            <text x="155" y="165" text-anchor="middle" font-size="13" font-weight="700" fill="#d35400" font-family="Lato,sans-serif">PR=0.20</text>
+            <text x="245" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#16a085" font-family="Lato,sans-serif">PR=0.40</text>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Transition Matrix A (3×3)</div>
+          <table class="prob-table violet">
+            <tr><th>From\To</th><th>A</th><th>B</th><th>C</th></tr>
+            <tr><td class="label">Page A</td><td class="lo">0.0</td><td class="mid">0.5</td><td class="mid">0.5</td></tr>
+            <tr><td class="label">Page B</td><td class="mid">0.5</td><td class="lo">0.0</td><td class="mid">0.5</td></tr>
+            <tr><td class="label">Page C</td><td class="hi">1.0</td><td class="lo">0.0</td><td class="lo">0.0</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">PageRank — Stationary Distribution</div>
+          <table class="prob-table teal">
+            <tr><th class="left">Page</th><th>Inbound Links</th><th>PageRank π*</th></tr>
+            <tr><td class="label">Page A</td><td>B(0.5), C(1.0)</td><td class="hi">0.40</td></tr>
+            <tr><td class="label">Page B</td><td>A(0.5)</td><td class="lo">0.20</td></tr>
+            <tr><td class="label">Page C</td><td>A(0.5), B(0.5)</td><td class="hi">0.40</td></tr>
+          </table>
+          <div class="table-caption">More inbound links = higher PageRank. Stationary dist of the surfer's Markov chain.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXAMPLE 3: Bigram / Text -->
+  <div class="example-card">
+    <span class="example-badge badge-complex">Example 3 — Bigram Language Model</span>
+    <h3 style="margin-top:0">First-Order Markov Chain for Text Generation</h3>
+    <p>State = current word, transition = next word probability. Derived from corpus statistics.</p>
+    <p><strong>Corpus:</strong> "The cat sat. The cat slept. The dog ran. The student studies AI."</p>
+
+    <div class="math-block">
+      <div class="formula" style="font-size:1rem;">P(w₁w₂...wₙ) ≈ P(w₁) × P(w₂|w₁) × P(w₃|w₂) × ... × P(wₙ|wₙ₋₁)</div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Bigram Transition Probability Table</div>
+      <table class="prob-table">
+        <tr><th class="left">Current Word</th><th>"The"</th><th>"cat"</th><th>"dog"</th><th>"student"</th><th>"sat"</th><th>"slept"</th><th>"ran"</th><th>"studies"</th><th>END</th></tr>
+        <tr><td class="label">&lt;START&gt;</td><td class="hi">1.00</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td></tr>
+        <tr><td class="label">"The"</td><td class="lo">-</td><td class="mid">0.50</td><td class="lo">0.25</td><td class="lo">0.25</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td></tr>
+        <tr><td class="label">"cat"</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="mid">0.50</td><td class="mid">0.50</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td></tr>
+        <tr><td class="label">"dog"</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="hi">1.00</td><td class="lo">-</td><td class="lo">-</td></tr>
+        <tr><td class="label">"student"</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="hi">1.00</td><td class="lo">-</td></tr>
+        <tr><td class="label">"sat","slept","ran","studies"</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="lo">-</td><td class="hi">1.00</td></tr>
+      </table>
+      <div class="table-caption">— = probability 0. Each row sums to 1.</div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Sample Sentence Probabilities</div>
+      <table class="prob-table teal">
+        <tr><th class="left">Sentence</th><th>Calculation</th><th>P(sentence)</th></tr>
+        <tr><td class="label">"The cat sat"</td><td>1.0 × 0.50 × 0.50</td><td class="hi">0.250</td></tr>
+        <tr><td class="label">"The dog ran"</td><td>1.0 × 0.25 × 1.00</td><td class="mid">0.250</td></tr>
+        <tr><td class="label">"The student studies"</td><td>1.0 × 0.25 × 1.00</td><td class="mid">0.250</td></tr>
+        <tr><td class="label">"The cat ran"</td><td>1.0 × 0.50 × 0.00</td><td class="lo">0.000</td></tr>
+      </table>
+      <div class="table-caption">"The cat ran" has zero probability — never seen in training corpus</div>
+    </div>
+
+    <div class="interactive-box" style="margin-top:1rem;">
+      <h4>🔤 Interactive Bigram Sentence Generator</h4>
+      <button class="btn" onclick="generateBigram()">Generate Sentence 🎲</button>
+      <div id="bigramOutput" style="margin-top:.75rem;font-family:'Source Code Pro',monospace;font-size:1.05rem;color:var(--accent1);font-weight:700;min-height:28px;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SECTION 4 — HIDDEN MARKOV MODELS
+══════════════════════════════════════════ -->
+<div class="section" id="hmm">
+  <div class="section-header">
+    <div class="section-num">Section 04</div>
+    <div class="section-title violet">Hidden Markov Models (HMM)</div>
+  </div>
+
+  <div class="defbox violet">
+    <div class="defbox-label">Definition</div>
+    A <strong>Hidden Markov Model (HMM)</strong> is a doubly stochastic process: an underlying <em>hidden</em> Markov chain drives a sequence of <em>observable emissions</em>. We cannot see the states — only the observations.
+  </div>
+
+  <h3>Formal Parameters: λ = (S, V, A, B, π)</h3>
+  <div class="two-col">
+    <div>
+      <div class="table-wrap">
+        <div class="table-title">HMM Components Summary</div>
+        <table class="prob-table violet">
+          <tr><th>Symbol</th><th class="left">Name</th><th class="left">Description</th></tr>
+          <tr><td>S</td><td class="label">State Space</td><td style="text-align:left">Hidden states {s₁, s₂, ..., sN}</td></tr>
+          <tr><td>V</td><td class="label">Observation Alphabet</td><td style="text-align:left">Observable symbols {v₁,...,vM}</td></tr>
+          <tr><td>A</td><td class="label">Transition Matrix</td><td style="text-align:left">A[i][j] = P(Xₜ₊₁=sⱼ|Xₜ=sᵢ)</td></tr>
+          <tr><td>B</td><td class="label">Emission Matrix</td><td style="text-align:left">B[i][k] = P(Oₜ=vₖ|Xₜ=sᵢ)</td></tr>
+          <tr><td>π</td><td class="label">Initial Distribution</td><td style="text-align:left">π[i] = P(X₁=sᵢ)</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 400 215" width="400" height="215" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="aH" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#555"/></marker></defs>
+          <text x="10" y="80" font-size="11" fill="#8e44ad" font-family="Lato,sans-serif" font-weight="700">HIDDEN</text>
+          <circle cx="100" cy="78" r="30" fill="#f5eef8" stroke="#8e44ad" stroke-width="2"/>
+          <text x="100" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#8e44ad" font-family="Lato,sans-serif">X₁</text>
+          <text x="100" y="89" text-anchor="middle" font-size="9" fill="#555" font-family="Lato,sans-serif">hidden</text>
+          <circle cx="220" cy="78" r="30" fill="#f5eef8" stroke="#8e44ad" stroke-width="2"/>
+          <text x="220" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#8e44ad" font-family="Lato,sans-serif">X₂</text>
+          <text x="220" y="89" text-anchor="middle" font-size="9" fill="#555" font-family="Lato,sans-serif">hidden</text>
+          <circle cx="340" cy="78" r="30" fill="#f5eef8" stroke="#8e44ad" stroke-width="2"/>
+          <text x="340" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#8e44ad" font-family="Lato,sans-serif">X₃</text>
+          <text x="340" y="89" text-anchor="middle" font-size="9" fill="#555" font-family="Lato,sans-serif">hidden</text>
+          <line x1="130" y1="78" x2="188" y2="78" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#aH)"/>
+          <text x="159" y="70" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">A</text>
+          <line x1="250" y1="78" x2="308" y2="78" stroke="#8e44ad" stroke-width="1.8" marker-end="url(#aH)"/>
+          <text x="279" y="70" font-size="10" fill="#8e44ad" font-family="Source Code Pro,monospace">A</text>
+          <text x="10" y="178" font-size="11" fill="#1e8449" font-family="Lato,sans-serif" font-weight="700">VISIBLE</text>
+          <rect x="70" y="150" width="60" height="38" rx="5" fill="#d5f5e3" stroke="#1e8449" stroke-width="2"/>
+          <text x="100" y="173" text-anchor="middle" font-size="13" font-weight="700" fill="#1e8449" font-family="Lato,sans-serif">O₁</text>
+          <rect x="190" y="150" width="60" height="38" rx="5" fill="#d5f5e3" stroke="#1e8449" stroke-width="2"/>
+          <text x="220" y="173" text-anchor="middle" font-size="13" font-weight="700" fill="#1e8449" font-family="Lato,sans-serif">O₂</text>
+          <rect x="310" y="150" width="60" height="38" rx="5" fill="#d5f5e3" stroke="#1e8449" stroke-width="2"/>
+          <text x="340" y="173" text-anchor="middle" font-size="13" font-weight="700" fill="#1e8449" font-family="Lato,sans-serif">O₃</text>
+          <line x1="100" y1="108" x2="100" y2="148" stroke="#1e8449" stroke-width="1.8" stroke-dasharray="4" marker-end="url(#aH)"/>
+          <text x="108" y="133" font-size="10" fill="#1e8449" font-family="Source Code Pro,monospace">B</text>
+          <line x1="220" y1="108" x2="220" y2="148" stroke="#1e8449" stroke-width="1.8" stroke-dasharray="4" marker-end="url(#aH)"/>
+          <text x="228" y="133" font-size="10" fill="#1e8449" font-family="Source Code Pro,monospace">B</text>
+          <line x1="340" y1="108" x2="340" y2="148" stroke="#1e8449" stroke-width="1.8" stroke-dasharray="4" marker-end="url(#aH)"/>
+          <text x="348" y="133" font-size="10" fill="#1e8449" font-family="Source Code Pro,monospace">B</text>
+        </svg>
+        <div class="diagram-caption">Solid = transition (A), Dashed = emission (B)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three Problems -->
+  <h3>Three Fundamental Problems of HMM</h3>
+  <div class="three-col">
+    <div class="defbox violet" style="margin:0">
+      <div class="defbox-label">Problem 1 — Evaluation</div>
+      <strong>Given:</strong> λ, O<br><strong>Find:</strong> P(O|λ)<br><strong>Algorithm:</strong> Forward (α-pass)<br><strong>Time:</strong> O(N²T)
+    </div>
+    <div class="defbox amber" style="margin:0">
+      <div class="defbox-label">Problem 2 — Decoding</div>
+      <strong>Given:</strong> λ, O<br><strong>Find:</strong> Best state seq Q*<br><strong>Algorithm:</strong> Viterbi (DP)<br><strong>Time:</strong> O(N²T)
+    </div>
+    <div class="defbox teal" style="margin:0">
+      <div class="defbox-label">Problem 3 — Learning</div>
+      <strong>Given:</strong> O<br><strong>Find:</strong> Best λ* = (A*,B*,π*)<br><strong>Algorithm:</strong> Baum-Welch (EM)<br><strong>Time:</strong> Iterative
+    </div>
+  </div>
+
+  <!-- HMM EXAMPLE 1: Dishonest Casino -->
+  <div class="example-card">
+    <span class="example-badge badge-simple">Example 1 — Dishonest Casino</span>
+    <h3 style="margin-top:0">Fair vs Loaded Die</h3>
+    <p>A casino secretly switches between a <strong>Fair</strong> and a <strong>Loaded</strong> die. We see only the numbers rolled — not which die is used. Classic HMM example from Durbin et al. (1998).</p>
+
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Initial Distribution π</div>
+          <table class="prob-table">
+            <tr><th class="left">Hidden State</th><th>π[i]</th></tr>
+            <tr><td class="label">✅ Fair Die</td><td class="mid">0.50</td></tr>
+            <tr><td class="label">🎲 Loaded Die</td><td class="mid">0.50</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">Transition Matrix A</div>
+          <table class="prob-table teal">
+            <tr><th>From \ To</th><th>Fair</th><th>Loaded</th></tr>
+            <tr><td class="label">✅ Fair</td><td class="hi">0.95</td><td class="lo">0.05</td></tr>
+            <tr><td class="label">🎲 Loaded</td><td class="lo">0.10</td><td class="hi">0.90</td></tr>
+          </table>
+          <div class="table-caption">Casino rarely switches dice (high self-transitions)</div>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Emission Matrix B — P(face | die)</div>
+          <table class="prob-table violet">
+            <tr><th class="left">Die</th><th>⚀1</th><th>⚁2</th><th>⚂3</th><th>⚃4</th><th>⚄5</th><th>⚅6</th></tr>
+            <tr><td class="label">✅ Fair</td><td>1/6</td><td>1/6</td><td>1/6</td><td>1/6</td><td>1/6</td><td>1/6</td></tr>
+            <tr><td class="label">🎲 Loaded</td><td class="lo">0.10</td><td class="lo">0.10</td><td class="lo">0.10</td><td class="lo">0.10</td><td class="lo">0.10</td><td class="hi">0.50</td></tr>
+          </table>
+          <div class="table-caption">Loaded die rolls 6 with probability 0.50 (3× more than fair)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Viterbi Decoding — Example Sequence</div>
+      <table class="prob-table">
+        <tr><th>Time t</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+        <tr><td class="label">Observation O</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+          <td>1</td><td>2</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+          <td style="color:var(--accent2);font-weight:700">6</td>
+        </tr>
+        <tr><td class="label">Viterbi State Q*</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+          <td style="background:#d5f5e3;color:#1e8449;font-weight:700">F</td>
+          <td style="background:#d5f5e3;color:#1e8449;font-weight:700">F</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+          <td style="background:#fdecea;color:#c0392b;font-weight:700">L</td>
+        </tr>
+        <tr><td class="label">Interpretation</td>
+          <td colspan="3" style="background:#fdecea;color:#c0392b;text-align:center;font-size:.82rem;">Loaded (three 6s suspicious)</td>
+          <td colspan="2" style="background:#d5f5e3;color:#1e8449;text-align:center;font-size:.82rem;">Fair (low values)</td>
+          <td colspan="3" style="background:#fdecea;color:#c0392b;text-align:center;font-size:.82rem;">Loaded again (three 6s)</td>
+        </tr>
+      </table>
+      <div class="table-caption">F = Fair die, L = Loaded die. Viterbi finds the most likely hidden state sequence.</div>
+    </div>
+
+    <!-- Viterbi step table for t=1,2,3 -->
+    <div class="table-wrap">
+      <div class="table-title">Viterbi δ Table (first 3 steps)</div>
+      <table class="prob-table">
+        <tr><th class="left">State</th><th>δ₁(O₁=6)</th><th>δ₂(O₂=6)</th><th>δ₃(O₃=6)</th></tr>
+        <tr><td class="label">✅ Fair (F)</td>
+          <td>0.5 × 1/6 = 0.0833</td>
+          <td>max(0.0833×0.95, 0.25×0.10) × 1/6 = 0.0132</td>
+          <td>≈ 0.00210</td>
+        </tr>
+        <tr><td class="label">🎲 Loaded (L)</td>
+          <td class="hi">0.5 × 0.50 = <strong>0.2500</strong></td>
+          <td class="hi">max(0.0833×0.05, 0.25×0.90) × 0.50 = <strong>0.1125</strong></td>
+          <td class="hi">≈ <strong>0.0507</strong></td>
+        </tr>
+        <tr><td class="label">Viterbi Choice</td>
+          <td style="background:var(--light2);font-weight:700;color:var(--accent2)">Loaded</td>
+          <td style="background:var(--light2);font-weight:700;color:var(--accent2)">Loaded</td>
+          <td style="background:var(--light2);font-weight:700;color:var(--accent2)">Loaded</td>
+        </tr>
+      </table>
+      <div class="table-caption">At each step, take the state with maximum δ value. Backtrack ψ pointers to recover full sequence.</div>
+    </div>
+
+    <!-- Interactive Simulator -->
+    <div class="interactive-box">
+      <h4>🎰 Interactive Casino HMM Simulator</h4>
+      <p style="font-size:.85rem;color:var(--muted);">Roll the die — the hidden state (which die is used) is revealed after each roll.</p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <button class="btn" onclick="rollDie()">Roll Die 🎲</button>
+        <button class="btn red" onclick="resetDie()">Reset</button>
+        <button class="btn teal" onclick="rollMany()">Roll 10 Times</button>
+      </div>
+      <div class="obs-track" id="dieObservations" style="margin-top:.75rem;"></div>
+      <div id="dieStates" style="font-size:.78rem;color:var(--muted);margin-top:.4rem;font-family:'Source Code Pro',monospace;"></div>
+      <div id="dieInfo" style="margin-top:.75rem;font-size:.9rem;"></div>
+    </div>
+  </div>
+
+  <!-- HMM EXAMPLE 2: POS Tagging -->
+  <div class="example-card">
+    <span class="example-badge badge-moderate">Example 2 — POS Tagging (NLP)</span>
+    <h3 style="margin-top:0">Part-of-Speech Tagging with HMM</h3>
+    <p>Assigns grammatical labels to words. Hidden = POS tags. Visible = words.</p>
+    <p><strong>Sentence:</strong> "The cat runs fast"</p>
+
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Initial Distribution π (sentence-start)</div>
+          <table class="prob-table">
+            <tr><th class="left">POS Tag</th><th>π[tag]</th></tr>
+            <tr><td class="label">DT (Determiner)</td><td class="hi">0.60</td></tr>
+            <tr><td class="label">NN (Noun)</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">VB (Verb)</td><td class="lo">0.20</td></tr>
+            <tr><td class="label">RB (Adverb)</td><td class="lo">0.10</td></tr>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">Transition Matrix A — P(tag_t+1 | tag_t)</div>
+          <table class="prob-table violet">
+            <tr><th>From\To</th><th>DT</th><th>NN</th><th>VB</th><th>RB</th></tr>
+            <tr><td class="label">DT</td><td class="lo">0.01</td><td class="hi">0.70</td><td class="lo">0.15</td><td class="lo">0.14</td></tr>
+            <tr><td class="label">NN</td><td class="lo">0.05</td><td class="lo">0.05</td><td class="hi">0.80</td><td class="lo">0.10</td></tr>
+            <tr><td class="label">VB</td><td class="lo">0.05</td><td class="lo">0.10</td><td class="lo">0.10</td><td class="hi">0.75</td></tr>
+            <tr><td class="label">RB</td><td class="lo">0.10</td><td class="lo">0.20</td><td class="lo">0.30</td><td class="lo">0.40</td></tr>
+          </table>
+          <div class="table-caption">Encodes grammatical structure: DT→NN is very likely (75% sentences: "the cat")</div>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Emission Matrix B — P(word | POS tag)</div>
+          <table class="prob-table amber">
+            <tr><th class="left">Word</th><th>DT</th><th>NN</th><th>VB</th><th>RB</th></tr>
+            <tr><td class="label">"the"</td><td class="hi">0.65</td><td class="lo">0.00</td><td class="lo">0.00</td><td class="lo">0.00</td></tr>
+            <tr><td class="label">"a"</td><td class="hi">0.25</td><td class="lo">0.00</td><td class="lo">0.00</td><td class="lo">0.00</td></tr>
+            <tr><td class="label">"cat"</td><td class="lo">0.00</td><td class="hi">0.15</td><td class="lo">0.00</td><td class="lo">0.00</td></tr>
+            <tr><td class="label">"dog"</td><td class="lo">0.00</td><td class="hi">0.12</td><td class="lo">0.00</td><td class="lo">0.00</td></tr>
+            <tr><td class="label">"runs"</td><td class="lo">0.00</td><td class="lo">0.02</td><td class="hi">0.20</td><td class="lo">0.00</td></tr>
+            <tr><td class="label">"fast"</td><td class="lo">0.00</td><td class="lo">0.01</td><td class="lo">0.01</td><td class="hi">0.40</td></tr>
+          </table>
+          <div class="table-caption">P(word|tag) estimated from tagged training corpus. Sums per column &lt; 1 (only showing subset of vocab).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Viterbi Decoding — "The cat runs fast"</div>
+      <table class="prob-table teal">
+        <tr><th class="left">State</th><th>"The"</th><th>"cat"</th><th>"runs"</th><th>"fast"</th></tr>
+        <tr><td class="label">DT</td><td class="hi"><strong>0.3900</strong></td><td class="lo">0.0027</td><td class="lo">0.0000</td><td class="lo">0.0000</td></tr>
+        <tr><td class="label">NN</td><td class="lo">0.0000</td><td class="hi"><strong>0.0410</strong></td><td class="lo">0.0066</td><td class="lo">0.0001</td></tr>
+        <tr><td class="label">VB</td><td class="lo">0.0000</td><td class="lo">0.0000</td><td class="hi"><strong>0.0066</strong></td><td class="lo">0.0020</td></tr>
+        <tr><td class="label">RB</td><td class="lo">0.0000</td><td class="lo">0.0000</td><td class="lo">0.0049</td><td class="hi"><strong>0.0020</strong></td></tr>
+        <tr class="result-row"><td class="label">Best Tag (argmax)</td>
+          <td><strong>DT</strong></td><td><strong>NN</strong></td><td><strong>VB</strong></td><td><strong>RB</strong></td>
+        </tr>
+      </table>
+      <div class="table-caption">Result: "The(DT) cat(NN) runs(VB) fast(RB)" — grammatically correct! Bold values = highest δ at each step.</div>
+    </div>
+  </div>
+
+  <!-- HMM EXAMPLE 3: Stock Market -->
+  <div class="example-card">
+    <span class="example-badge badge-complex">Example 3 — Financial Market Regime Detection</span>
+    <h3 style="margin-top:0">Bull/Bear/Sideways Market with HMM</h3>
+    <p>Market regimes are hidden; we observe daily returns. HMM with Gaussian emissions models the data.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Transition Matrix A — Market Regimes</div>
+          <table class="prob-table">
+            <tr><th>From\To</th><th>🐂 Bull</th><th>🐻 Bear</th><th>↔ Sideways</th></tr>
+            <tr><td class="label">🐂 Bull</td><td class="hi">0.85</td><td class="lo">0.05</td><td class="mid">0.10</td></tr>
+            <tr><td class="label">🐻 Bear</td><td class="lo">0.10</td><td class="hi">0.80</td><td class="mid">0.10</td></tr>
+            <tr><td class="label">↔ Sideways</td><td class="mid">0.25</td><td class="mid">0.25</td><td class="mid">0.50</td></tr>
+          </table>
+          <div class="table-caption">Regimes persist — high self-transition probabilities</div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">Initial Distribution π₀</div>
+          <table class="prob-table amber">
+            <tr><th class="left">Regime</th><th>π</th></tr>
+            <tr><td class="label">🐂 Bull</td><td class="mid">0.40</td></tr>
+            <tr><td class="label">🐻 Bear</td><td class="lo">0.20</td></tr>
+            <tr><td class="label">↔ Sideways</td><td class="mid">0.40</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <div class="table-title">Emission Parameters — Daily Return Distribution</div>
+          <table class="prob-table violet">
+            <tr><th class="left">Regime</th><th>Emission Type</th><th>Mean μ</th><th>Std σ</th></tr>
+            <tr><td class="label">🐂 Bull</td><td>Gaussian</td><td class="hi">+0.8%</td><td class="lo">1.0%</td></tr>
+            <tr><td class="label">🐻 Bear</td><td>Gaussian</td><td class="lo">−0.6%</td><td class="hi">2.5%</td></tr>
+            <tr><td class="label">↔ Sideways</td><td>Gaussian</td><td>0.0%</td><td class="mid">0.8%</td></tr>
+          </table>
+          <div class="table-caption">Bull = positive returns, low volatility. Bear = negative returns, HIGH volatility.</div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-title">Discretised Emission Matrix B (approximate)</div>
+          <table class="prob-table teal">
+            <tr><th class="left">Regime</th><th>High+</th><th>Low+</th><th>Flat</th><th>Low−</th><th>High−</th></tr>
+            <tr><td class="label">🐂 Bull</td><td class="hi">0.35</td><td class="hi">0.35</td><td class="mid">0.20</td><td class="lo">0.07</td><td class="lo">0.03</td></tr>
+            <tr><td class="label">🐻 Bear</td><td class="lo">0.05</td><td class="lo">0.10</td><td class="mid">0.20</td><td class="mid">0.30</td><td class="hi">0.35</td></tr>
+            <tr><td class="label">↔ Sideways</td><td class="lo">0.10</td><td class="mid">0.25</td><td class="hi">0.30</td><td class="mid">0.25</td><td class="lo">0.10</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-title">Viterbi Decoding — Sample Week of Returns</div>
+      <table class="prob-table">
+        <tr><th>Day</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr>
+        <tr><td class="label">Observed Return</td><td style="color:var(--accent3)">+1.2%</td><td style="color:var(--accent3)">+0.9%</td><td style="color:var(--muted)">-0.1%</td><td style="color:var(--accent2)">-1.8%</td><td style="color:var(--accent2)">-2.5%</td></tr>
+        <tr><td class="label">Classified Return</td><td>High+</td><td>Low+</td><td>Flat</td><td>Low−</td><td>High−</td></tr>
+        <tr class="result-row"><td class="label">Viterbi Regime</td>
+          <td style="background:var(--light3);color:var(--accent3)">🐂 Bull</td>
+          <td style="background:var(--light3);color:var(--accent3)">🐂 Bull</td>
+          <td style="background:var(--light1)">↔ Side</td>
+          <td style="background:var(--light2);color:var(--accent2)">🐻 Bear</td>
+          <td style="background:var(--light2);color:var(--accent2)">🐻 Bear</td>
+        </tr>
+      </table>
+      <div class="table-caption">Viterbi detects the market regime transition mid-week. Applications: risk management, portfolio rebalancing.</div>
+    </div>
+  </div>
+
+  <!-- Forward Algorithm -->
+  <h3>The Forward Algorithm — Evaluation Problem</h3>
+  <div class="defbox">
+    <div class="defbox-label">Purpose</div>
+    Computes P(O | λ) — the probability of observing a sequence O given the model. Used for model comparison and likelihood scoring.
+  </div>
+  <div class="math-block">
+    <div class="formula" style="font-size:1rem;">αₜ(i) = P(O₁,...,Oₜ, Xₜ=sᵢ | λ)</div>
+    <div class="explain">α_t(i) = joint probability: observed O₁...Oₜ AND are in state i at time t</div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-title">Forward Algorithm Steps</div>
+    <table class="prob-table">
+      <tr><th class="left">Step</th><th class="left">Formula</th><th class="left">Description</th></tr>
+      <tr><td class="label">Initialisation</td><td>α₁(i) = π[i] · B[i][O₁]</td><td style="text-align:left">t=1: prior × emission</td></tr>
+      <tr><td class="label">Recursion (t=2..T)</td><td>αₜ(j) = [Σᵢ αₜ₋₁(i)·A[i][j]] · B[j][Oₜ]</td><td style="text-align:left">Sum over all previous states</td></tr>
+      <tr class="result-row"><td class="label">Termination</td><td>P(O|λ) = Σᵢ αT(i)</td><td style="text-align:left">Sum over all final states</td></tr>
+    </table>
+  </div>
+
+  <!-- Comparison Table -->
+  <h3>Comparison: Markov Chain vs HMM vs BBN</h3>
+  <table class="prob-table">
+    <tr><th class="left">Property</th><th>Markov Chain</th><th>HMM</th><th>Bayesian Network</th></tr>
+    <tr><td class="label">States Observable?</td><td class="hi">✅ Yes</td><td class="lo">❌ Hidden</td><td>Partial (evidence nodes)</td></tr>
+    <tr><td class="label">Structure</td><td>Linear chain</td><td>Linear chain + emissions</td><td>Arbitrary DAG</td></tr>
+    <tr><td class="label">Key Parameters</td><td>A (transitions)</td><td>A, B, π</td><td>CPTs per node</td></tr>
+    <tr><td class="label">Key Algorithm</td><td>πₜ = π₀·Aᵗ</td><td>Viterbi, Forward-Backward</td><td>Variable Elim., Belief Prop.</td></tr>
+    <tr><td class="label">Time Complexity</td><td>O(N²)</td><td>O(N²T)</td><td>NP-hard (exact); poly (trees)</td></tr>
+    <tr><td class="label">Learning</td><td>Count transitions</td><td>Baum-Welch (EM)</td><td>MLE / EM from data</td></tr>
+    <tr><td class="label">Applications</td><td>PageRank, NLP n-grams</td><td>Speech, POS, Bioinformatics</td><td>Diagnosis, Decision support</td></tr>
+  </table>
+
+  <!-- HMM Step-Through -->
+  <div class="interactive-box">
+    <h4>▶ HMM Viterbi Step-Through Animator</h4>
+    <p style="font-size:.85rem;color:var(--muted)">Step through the observation sequence and Viterbi decoded states for the casino example.</p>
+    <button class="btn violet" onclick="hmmStepFn()">Step ▶</button>
+    <button class="btn ghost" onclick="hmmResetFn()" style="margin-left:.5rem;">Reset</button>
+    <div style="margin-top:1rem;display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start;">
+      <div>
+        <div class="defbox-label" style="margin-bottom:.5rem;">Observations O</div>
+        <div class="obs-track" id="hmmObs"></div>
+      </div>
+      <div>
+        <div class="defbox-label" style="margin-bottom:.5rem;">Viterbi States Q*</div>
+        <div class="obs-track" id="hmmStates"></div>
+      </div>
+    </div>
+    <div id="hmmInfo" style="margin-top:1rem;font-size:.9rem;color:var(--accent4);font-weight:600;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     REFERENCES
+══════════════════════════════════════════ -->
+<div class="section" id="references" style="background:#fafafa;">
+  <div class="section-header">
+    <div class="section-num">Academic References</div>
+    <div class="section-title" style="font-size:1.8rem;">Bibliography</div>
+  </div>
+  <ul class="ref-list">
+    <li>Russell, S. J., &amp; Norvig, P. (2020). <em>Artificial Intelligence: A Modern Approach</em> (4th ed.). Pearson. [Chapters 12, 13, 14 — Probabilistic Reasoning, Probabilistic Reasoning over Time]</li>
+    <li>Pearl, J. (1988). <em>Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference</em>. Morgan Kaufmann. [Foundational text on Bayesian Networks]</li>
+    <li>Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition. <em>Proceedings of the IEEE, 77</em>(2), 257–286.</li>
+    <li>Koller, D., &amp; Friedman, N. (2009). <em>Probabilistic Graphical Models: Principles and Techniques</em>. MIT Press. [Chapters 3–10: BBN, inference, learning]</li>
+    <li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>. Springer. [Chapter 8: Graphical Models; Chapter 13: Sequential Data — HMM]</li>
+    <li>Murphy, K. P. (2012). <em>Machine Learning: A Probabilistic Perspective</em>. MIT Press. [Chapters 17–18: Markov and Hidden Markov Models]</li>
+    <li>Durbin, R., Eddy, S., Krogh, A., &amp; Mitchison, G. (1998). <em>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</em>. Cambridge University Press. [Dishonest casino example; HMM in bioinformatics]</li>
+    <li>Page, L., Brin, S., Motwani, R., &amp; Winograd, T. (1999). <em>The PageRank Citation Ranking: Bringing Order to the Web</em>. Stanford Technical Report.</li>
+    <li>Manning, C. D., &amp; Schütze, H. (1999). <em>Foundations of Statistical Natural Language Processing</em>. MIT Press. [Chapters 9–10: Markov Models, POS Tagging]</li>
+    <li>Viterbi, A. J. (1967). Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. <em>IEEE Transactions on Information Theory, 13</em>(2), 260–269.</li>
+    <li>Baum, L. E., Petrie, T., Soules, G., &amp; Weiss, N. (1970). A maximization technique in the statistical analysis of probabilistic functions of Markov chains. <em>Annals of Mathematical Statistics, 41</em>(1), 164–171. [Baum-Welch EM algorithm]</li>
+    <li>NPTEL IIT Madras. <em>Artificial Intelligence — Prof. Deepak Khemani</em>. Available: nptel.ac.in [Standard reference for Indian BTech AI curriculum]</li>
+  </ul>
+  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--rule);font-size:.8rem;color:var(--muted);">
+    <strong>Subject:</strong> Artificial Intelligence (CS604 / AI elective) | B.Tech Computer Science | Indian Universities<br>
+    <strong>Topics:</strong> Bayes' Theorem · Naïve Bayes · Bayesian Belief Networks · Conditional Probability Tables ·
+    Markov Chains · PageRank · Language Models · Hidden Markov Models · Viterbi · Forward Algorithm · Baum-Welch
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ JAVASCRIPT ══════════════════════════════════════════ -->
+<script>
+// Hero deco
+(function(){
+  const d=document.getElementById('heroDeco'); if(!d) return;
+  const t=['P(A|B)','α·β','A[i][j]','π·A','HMM','BBN','∑=1','Viterbi','EM','λ=(A,B,π)','CPT','DAG','argmax','forward','B[i][k]','Bayes','NLP'];
+  let s=''; for(let r=0;r<32;r++){for(let c=0;c<5;c++) s+=t[Math.floor(Math.random()*t.length)].padEnd(18); s+='\n';} d.textContent=s;
+})();
+
+// ── Bayes Calculator ──
+function computeBayes(){
+  const pa   = parseInt(document.getElementById('pa').value)/100;
+  const pba  = parseInt(document.getElementById('pba').value)/100;
+  const pbna = parseInt(document.getElementById('pbna').value)/100;
+  document.getElementById('pa-val').textContent   = pa.toFixed(2);
+  document.getElementById('pba-val').textContent  = pba.toFixed(2);
+  document.getElementById('pbna-val').textContent = pbna.toFixed(2);
+  const pb  = pba*pa + pbna*(1-pa);
+  const post= pba*pa / pb;
+  const notp= 1 - post;
+  document.getElementById('bayes-result').textContent =
+    `P(A|B) = ${(post*100).toFixed(2)}%  |  P(¬A|B) = ${(notp*100).toFixed(2)}%  |  P(B) = ${pb.toFixed(4)}`;
+  // Dynamic table
+  const tbl = document.getElementById('bayesDynTable');
+  tbl.innerHTML = `
+    <div class="table-wrap">
+      <div class="table-title">Live Calculation Table</div>
+      <table class="prob-table teal">
+        <tr><th class="left">Step</th><th>A (Disease)</th><th>¬A (No Disease)</th></tr>
+        <tr><td class="label">Prior P</td><td>${pa.toFixed(4)}</td><td>${(1-pa).toFixed(4)}</td></tr>
+        <tr><td class="label">Likelihood P(B|·)</td><td>${pba.toFixed(4)}</td><td>${pbna.toFixed(4)}</td></tr>
+        <tr><td class="label">Joint = Prior × Likelihood</td><td>${(pba*pa).toFixed(4)}</td><td>${(pbna*(1-pa)).toFixed(4)}</td></tr>
+        <tr><td class="label">Evidence P(B) = sum</td><td colspan="2" style="text-align:center"><strong>${pb.toFixed(4)}</strong></td></tr>
+        <tr style="background:var(--light3)"><td class="label"><strong>Posterior = Joint / P(B)</strong></td><td style="color:var(--accent3);font-weight:700">${(post*100).toFixed(2)}%</td><td style="color:var(--muted)">${(notp*100).toFixed(2)}%</td></tr>
+      </table>
+    </div>`;
+  drawBayesBar(post);
+}
+function drawBayesBar(p){
+  const c=document.getElementById('bayesCanvas'); if(!c) return;
+  const ctx=c.getContext('2d'), w=c.width, h=c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#f4f4f4'; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#c0392b'; ctx.fillRect(10,18,(w-20)*p,26);
+  ctx.fillStyle='#16a085'; ctx.fillRect(10+(w-20)*p,18,(w-20)*(1-p),26);
+  ctx.fillStyle='#fff'; ctx.font='bold 12px "Source Code Pro",monospace'; ctx.textBaseline='middle';
+  if(p>0.12) ctx.fillText(`A: ${(p*100).toFixed(1)}%`,16,31);
+  ctx.fillStyle='#fff';
+  ctx.fillText(`¬A: ${((1-p)*100).toFixed(1)}%`,10+(w-20)*p+8,31);
+  ctx.fillStyle='#555'; ctx.font='11px Lato,sans-serif';
+  ctx.fillText('← Posterior probability visualisation',10,60);
+}
+computeBayes();
+
+// ── Weather Markov ──
+let markovCurrent='Sunny', markovLog=[];
+const mTrans={Sunny:{Sunny:.8,Rainy:.2},Rainy:{Sunny:.3,Rainy:.7}};
+function markovStep(){
+  markovCurrent=Math.random()<mTrans[markovCurrent].Sunny?'Sunny':'Rainy';
+  markovLog.push(markovCurrent);
+  document.getElementById('markovState').textContent=markovCurrent==='Sunny'?'☀️ Sunny':'🌧️ Rainy';
+  document.getElementById('markovHistory').textContent=markovLog.slice(-40).map(s=>s==='Sunny'?'☀':'🌧').join(' ');
+  if(markovLog.length>=5){
+    const n=markovLog.length, s=markovLog.filter(x=>x==='Sunny').length;
+    document.getElementById('markovStats').innerHTML=
+      `Steps: <strong>${n}</strong> &nbsp; ☀️ ${((s/n)*100).toFixed(1)}% &nbsp; 🌧️ ${(((n-s)/n)*100).toFixed(1)}%
+       &nbsp; <span style="color:var(--muted);font-size:.82rem;">(Stationary: ☀️60% 🌧️40%)</span>`;
+  }
+}
+function markovReset(){
+  markovCurrent='Sunny'; markovLog=[];
+  document.getElementById('markovState').textContent='☀️ Sunny';
+  document.getElementById('markovHistory').textContent='';
+  document.getElementById('markovStats').innerHTML='';
+}
+function markov100(){ for(let i=0;i<100;i++) markovStep(); }
+
+// ── Bigram ──
+const bg={
+  'The':['cat','cat','dog','student'],
+  'cat':['sat','slept'],
+  'dog':['ran'],
+  'student':['studies'],
+  'sat':['quietly.'],
+  'slept':['peacefully.'],
+  'ran':['fast.'],
+  'studies':['AI.','hard.','daily.'],
+  'quietly.':null,'peacefully.':null,'fast.':null,'AI.':null,'hard.':null,'daily.':null
+};
+function generateBigram(){
+  let w='The', s=['The'];
+  for(let i=0;i<10;i++){
+    const nx=bg[w]; if(!nx) break;
+    const n=nx[Math.floor(Math.random()*nx.length)]; s.push(n); if(n.endsWith('.')) break; w=n;
+  }
+  document.getElementById('bigramOutput').textContent=s.join(' ');
+}
+
+// ── Casino Die ──
+let dieObs=[],dieHidden=[],dieCurr=Math.random()<.5?'Fair':'Loaded';
+function rollOneDie(){
+  if(Math.random()<(dieCurr==='Fair'?.05:.10)) dieCurr=dieCurr==='Fair'?'Loaded':'Fair';
+  const em=dieCurr==='Fair'?[1/6,1/6,1/6,1/6,1/6,1/6]:[.1,.1,.1,.1,.1,.5];
+  let r=Math.random(),f=1,cum=0;
+  for(let i=0;i<6;i++){cum+=em[i];if(r<cum){f=i+1;break;}}
+  dieObs.push(f); dieHidden.push(dieCurr); renderDie();
+}
+function renderDie(){
+  const od=document.getElementById('dieObservations');
+  const sd=document.getElementById('dieStates');
+  const info=document.getElementById('dieInfo');
+  od.innerHTML=dieObs.map((v,i)=>{
+    const h=dieHidden[i];
+    const bg=h==='Loaded'?'#fdecea':'#d5f5e3', col=h==='Loaded'?'#c0392b':'#1e8449';
+    return `<span class="obs-token" style="background:${bg};color:${col};border-color:${col};">⚀${v}</span>`;
+  }).join('');
+  sd.textContent='States: '+dieHidden.join(' → ');
+  const n=dieHidden.length, L=dieHidden.filter(s=>s==='Loaded').length;
+  info.innerHTML=`Rolls: <strong>${n}</strong> | 🎲 Loaded: <strong style="color:#c0392b">${n?((L/n)*100).toFixed(0):0}%</strong> | Current Die: <strong style="color:${dieCurr==='Loaded'?'#c0392b':'#1e8449'}">${dieCurr}</strong>`;
+}
+function rollDie(){rollOneDie();}
+function rollMany(){for(let i=0;i<10;i++) rollOneDie();}
+function resetDie(){
+  dieObs=[];dieHidden=[];dieCurr=Math.random()<.5?'Fair':'Loaded';
+  document.getElementById('dieObservations').innerHTML='';
+  document.getElementById('dieStates').textContent='';
+  document.getElementById('dieInfo').innerHTML='';
+}
+
+// ── HMM Step-Through ──
+const hmmSeq=[
+  {obs:6,state:'Loaded'},{obs:6,state:'Loaded'},{obs:6,state:'Loaded'},
+  {obs:5,state:'Loaded'},{obs:1,state:'Fair'},{obs:2,state:'Fair'},
+  {obs:3,state:'Fair'},{obs:6,state:'Loaded'},{obs:6,state:'Loaded'},
+  {obs:4,state:'Fair'},{obs:6,state:'Loaded'},{obs:6,state:'Loaded'},
+];
+let hmmIdx=0;
+function hmmStepFn(){
+  if(hmmIdx>=hmmSeq.length){hmmResetFn();return;}
+  const s=hmmSeq[hmmIdx];
+  // observation token
+  const oEl=document.createElement('span'); oEl.className='obs-token active';
+  oEl.style.background=s.obs===6?'#fdecea':'#d5f5e3';
+  oEl.style.color=s.obs===6?'#c0392b':'#1e8449';
+  oEl.style.borderColor=s.obs===6?'#c0392b':'#1e8449';
+  oEl.textContent=`⚀${s.obs}`;
+  document.getElementById('hmmObs').appendChild(oEl);
+  setTimeout(()=>oEl.classList.remove('active'),500);
+  // state token
+  const stEl=document.createElement('span'); stEl.className='obs-token active';
+  stEl.style.background=s.state==='Loaded'?'#fdecea':'#d5f5e3';
+  stEl.style.color=s.state==='Loaded'?'#c0392b':'#1e8449';
+  stEl.style.borderColor=s.state==='Loaded'?'#c0392b':'#1e8449';
+  stEl.textContent=s.state==='Loaded'?'🎲 Loaded':'✅ Fair';
+  document.getElementById('hmmStates').appendChild(stEl);
+  setTimeout(()=>stEl.classList.remove('active'),500);
+  hmmIdx++;
+  document.getElementById('hmmInfo').textContent=
+    `t=${hmmIdx}: Observed ⚀${s.obs} → Viterbi decodes: ${s.state} die (${hmmIdx}/${hmmSeq.length})`;
+}
+function hmmResetFn(){
+  hmmIdx=0;
+  document.getElementById('hmmObs').innerHTML='';
+  document.getElementById('hmmStates').innerHTML='';
+  document.getElementById('hmmInfo').textContent='';
+}
+
+// ── Scroll observer ──
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('fade-in');})},{threshold:.08});
+document.querySelectorAll('.example-card,.defbox,.math-block,.table-wrap').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

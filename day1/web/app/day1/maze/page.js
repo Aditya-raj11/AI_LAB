@@ -312,7 +312,7 @@ export default function MazePage() {
       <div className={styles.body}>
         {/* Canvas Area */}
         <div className={styles.canvasArea}>
-          <div className={styles.grid} style={{ gridTemplateColumns: `repeat(${cols}, 52px)` }}>
+          <div className={styles.grid} style={{ gridTemplateColumns: `repeat(${cols}, var(--cell-size))` }}>
             {maze.map((row, r) =>
               row.map((_, c) => (
                 <div

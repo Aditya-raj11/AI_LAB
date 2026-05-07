@@ -55,6 +55,7 @@
 }
 
 .grid {
+  --cell-size: 52px;
   display: inline-grid;
   gap: 3px;
   padding: 16px;
@@ -65,8 +66,8 @@
 }
 
 .cell {
-  width: 52px;
-  height: 52px;
+  width: var(--cell-size);
+  height: var(--cell-size);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -335,3 +336,99 @@
 .logNoPath { color: var(--danger); }
 .logEnqueue { color: var(--text-muted); }
 .logStart { color: var(--purple); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 900px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .canvasArea {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .grid {
+    --cell-size: 38px;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    font-size: 8px;
+    border-radius: 6px;
+  }
+
+  .panel {
+    width: 100%;
+    min-width: unset;
+    border-left: none;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .logBox {
+    max-height: 160px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 480px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .navbar { padding: 10px 12px; }
+  .backLink { font-size: 11px; }
+  .pageTitle { font-size: 13px; }
+
+  .canvasArea {
+    padding: 10px 6px;
+    gap: 10px;
+  }
+
+  .grid {
+    --cell-size: 28px;
+    gap: 2px;
+    padding: 8px;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    font-size: 7px;
+    border-radius: 4px;
+  }
+  .cell:hover {
+    transform: none;
+  }
+
+  .cellDot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .legend { gap: 8px; }
+  .legendItem { font-size: 9px; }
+  .legendChip { width: 10px; height: 10px; }
+
+  .panelSection { padding: 14px; }
+  .sectionLabel { font-size: 10px; margin-bottom: 8px; }
+
+  .algBtn { padding: 8px; font-size: 11px; }
+  .actionBtn { padding: 10px; font-size: 12px; }
+
+  .statsGrid { gap: 6px; }
+  .statCard { padding: 8px 10px; }
+  .statLabel { font-size: 9px; }
+  .statValue { font-size: 18px; }
+
+  .logBox {
+    min-height: 80px;
+    max-height: 120px;
+    font-size: 10px;
+  }
+}

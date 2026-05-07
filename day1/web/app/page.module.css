@@ -298,3 +298,35 @@
   position: relative;
   z-index: 1;
 }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablet
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .navbar { padding: 14px 20px; }
+  .heroContent { padding: 40px 20px; }
+  .section { padding: 0 20px 60px; }
+  .cardGrid { grid-template-columns: 1fr; }
+  .hero::before { width: 350px; height: 350px; }
+  .hero::after { width: 280px; height: 280px; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile
+   ═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .navbar { padding: 12px 16px; }
+  .navLinks { gap: 4px; }
+  .navLink { padding: 6px 10px; font-size: 12px; }
+  .logoText { font-size: 15px; }
+  .logoIcon { width: 30px; height: 30px; font-size: 14px; }
+  .heroContent { padding: 30px 16px; }
+  .heroTitle { letter-spacing: -0.8px; }
+  .heroSubtitle { font-size: 15px; margin-bottom: 28px; }
+  .section { padding: 0 16px 40px; }
+  .dayCard { padding: 20px; }
+  .dayCardTitle { font-size: 17px; }
+  .dayCardDesc { font-size: 13px; }
+  .dayCardArrow { top: 20px; right: 20px; }
+  .footer { padding: 20px 16px; }
+}

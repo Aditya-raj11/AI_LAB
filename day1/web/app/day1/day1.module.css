@@ -176,3 +176,28 @@
 .toolCardBtn:hover {
   filter: brightness(1.15);
 }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablet
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .navbar { padding: 12px 16px; }
+  .content { padding: 28px 16px; }
+  .toolGrid { grid-template-columns: 1fr; }
+  .headerTitle { font-size: 26px; }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile
+   ═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .navbar { padding: 10px 12px; }
+  .backLink { font-size: 12px; }
+  .dayTitle { font-size: 13px; }
+  .content { padding: 20px 12px; }
+  .headerTitle { font-size: 22px; }
+  .headerDesc { font-size: 14px; }
+  .toolCard { padding: 20px; }
+  .toolCardTitle { font-size: 17px; }
+  .toolCardIcon { width: 42px; height: 42px; font-size: 22px; }
+}

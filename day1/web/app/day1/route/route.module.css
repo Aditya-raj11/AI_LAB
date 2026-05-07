@@ -224,3 +224,73 @@
 }
 
 .logEntry { padding: 1px 0; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 900px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .canvasArea {
+    min-height: 350px;
+    max-height: 45vh;
+  }
+
+  .graphCanvas {
+    min-height: 300px;
+  }
+
+  .panel {
+    width: 100%;
+    min-width: unset;
+    border-left: none;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .logBox {
+    max-height: 140px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 480px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .navbar { padding: 10px 12px; }
+  .backLink { font-size: 11px; }
+  .pageTitle { font-size: 13px; }
+
+  .canvasArea {
+    min-height: 280px;
+    max-height: 40vh;
+  }
+
+  .canvasLegend {
+    font-size: 9px;
+    padding: 6px 10px;
+    top: 6px;
+    left: 6px;
+  }
+
+  .panelSection { padding: 14px; }
+  .sectionLabel { font-size: 10px; margin-bottom: 8px; }
+
+  .select { padding: 7px 10px; font-size: 12px; }
+  .selectLabel { font-size: 11px; }
+  .actionBtn { padding: 10px; font-size: 12px; }
+
+  .statsGrid { gap: 6px; }
+  .statCard { padding: 8px 10px; }
+  .statLabel { font-size: 9px; }
+  .statValue { font-size: 16px; }
+
+  .logBox {
+    min-height: 80px;
+    max-height: 120px;
+    font-size: 10px;
+  }
+}
