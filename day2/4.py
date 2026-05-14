@@ -1,13 +1,14 @@
 import heapq
 
 def uniform_cost_search(graph, start, goal):
-    pq = []  # priority queue: stores (cost, node, path)
-    heapq.heappush(pq, (0, start, [start]))
+    pq = []  # priority queue: stores (cost, tiebreaker, node, path)
+    tiebreaker = 0
+    heapq.heappush(pq, (0, tiebreaker, start, [start]))
     
     visited = set()
     
     while pq:
-        cost, node, path = heapq.heappop(pq)
+        cost, _, node, path = heapq.heappop(pq)
         
         if node in visited:
             continue
@@ -19,9 +20,10 @@ def uniform_cost_search(graph, start, goal):
             return cost, path
         
         # Expand neighbors
-        for neighbor, edge_cost in graph[node]:
+        for neighbor, edge_cost in graph.get(node, []):
             if neighbor not in visited:
-                heapq.heappush(pq, (cost + edge_cost, neighbor, path + [neighbor]))
+                tiebreaker += 1
+                heapq.heappush(pq, (cost + edge_cost, tiebreaker, neighbor, path + [neighbor]))
     
     return float("inf"), []  # goal not reachable
 

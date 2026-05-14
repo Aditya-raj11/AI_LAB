@@ -12,17 +12,16 @@ const days = [
     iconBg: "rgba(59, 130, 246, 0.15)",
     href: "/day1",
   },
-  // Future days go here — just copy the object above and change the values!
-  // {
-  //   day: 2,
-  //   title: "Heuristic Search",
-  //   desc: "Best-First Search, A*, and UCS on grid environments.",
-  //   topics: ["A*", "UCS", "Best-First", "Heuristics"],
-  //   icon: "🧭",
-  //   gradient: "linear-gradient(135deg, #22c55e, #06b6d4)",
-  //   iconBg: "rgba(34, 197, 94, 0.15)",
-  //   href: "/day2",
-  // },
+  {
+    day: 2,
+    title: "Heuristic & Cost Search",
+    desc: "Maze Solver with Greedy Best-First Search and Route Finder with Uniform Cost Search using dynamic Euclidean edge weights.",
+    topics: ["GBFS", "UCS", "Heuristics", "Dynamic Weights"],
+    icon: "🧭",
+    gradient: "linear-gradient(135deg, #22c55e, #06b6d4)",
+    iconBg: "rgba(34, 197, 94, 0.15)",
+    href: "/day2",
+  },
 ];
 
 export default function Home() {
@@ -48,6 +47,11 @@ export default function Home() {
           <li>
             <Link href="/day1" className={styles.navLink}>
               Day 1
+            </Link>
+          </li>
+          <li>
+            <Link href="/day2" className={styles.navLink}>
+              Day 2
             </Link>
           </li>
         </ul>

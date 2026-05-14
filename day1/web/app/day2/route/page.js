@@ -4,76 +4,60 @@ import Link from "next/link";
 import styles from "./route.module.css";
 
 /* ═══════════════════════════════════════════
-   BIDIRECTIONAL SEARCH (ported from Python)
+   UNIFORM COST SEARCH (ported from Python)
    ═══════════════════════════════════════════ */
-function* bidirectionalTrace(graph, start, goal) {
+function* ucsTrace(graph, positions, start, goal) {
   if (start === goal) {
     yield { event:"solution", step:0, current:start, frontVisited:new Set([start]),
-            backVisited:new Set([goal]), path:[start], meeting:start,
+            backVisited:new Set(), path:[start], meeting:null,
             message:"Start and goal are the same node." };
     return;
   }
 
-  const frontQueue = [start], backQueue = [goal];
-  const frontParent = { [start]: null }, backParent = { [goal]: null };
-  const frontVisited = new Set([start]), backVisited = new Set([goal]);
+  const distance = (n1, n2) => {
+    const [x1, y1] = positions[n1] || [0,0];
+    const [x2, y2] = positions[n2] || [0,0];
+    return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
+  };
+
+  const pq = [{ node: start, cost: 0, path: [start] }];
+  const visited = new Set();
   let step = 0;
 
-  yield { event:"start", step, current:start, frontVisited:new Set(frontVisited),
-          backVisited:new Set(backVisited), path:[start], meeting:null,
-          message:`Starting bidirectional search from ${start} to ${goal}.` };
+  yield { event:"start", step, current:start, frontVisited:new Set(visited),
+          backVisited:new Set(), path:[start], meeting:null,
+          message:`Starting Uniform Cost Search from ${start} to ${goal}.` };
 
-  function buildPath(meet) {
-    const path = [];
-    let node = meet;
-    while (node !== null) { path.push(node); node = frontParent[node]; }
-    path.reverse();
-    node = backParent[meet];
-    while (node !== null) { path.push(node); node = backParent[node]; }
-    return path;
-  }
+  while (pq.length > 0) {
+    // Extract minimum cost node
+    pq.sort((a, b) => a.cost - b.cost);
+    const { node, cost, path } = pq.shift();
 
-  function expand(queue, parent, thisVisited, otherVisited, label) {
-    if (!queue.length) return [null, `${label} frontier is empty.`, null];
-    const node = queue.shift();
+    if (visited.has(node)) continue;
+    visited.add(node);
+    step++;
+
+    yield { event:"expand", step, current:node, frontVisited:new Set(visited),
+            backVisited:new Set(), path: [], meeting:null,
+            message:`Expanded ${node} (Cost: ${Math.round(cost)})` };
+
+    if (node === goal) {
+      yield { event:"solution", step, current:node, frontVisited:new Set(visited),
+              backVisited:new Set(), path, meeting:null,
+              message:`✓ Goal reached! Total cost: ${Math.round(cost)}` };
+      return;
+    }
+
     for (const neigh of (graph[node] || [])) {
-      if (!thisVisited.has(neigh)) {
-        thisVisited.add(neigh);
-        parent[neigh] = node;
-        queue.push(neigh);
-        if (otherVisited.has(neigh))
-          return [node, `${label} side reached meeting node ${neigh}.`, neigh];
+      if (!visited.has(neigh)) {
+        const edgeCost = distance(node, neigh);
+        pq.push({ node: neigh, cost: cost + edgeCost, path: [...path, neigh] });
       }
     }
-    return [node, `${label} side expanded ${node}.`, null];
   }
 
-  while (frontQueue.length && backQueue.length) {
-    step++;
-    const [fNode, fMsg, fMeet] = expand(frontQueue, frontParent, frontVisited, backVisited, "Forward");
-    yield { event:"front_expand", step, current:fNode, frontVisited:new Set(frontVisited),
-            backVisited:new Set(backVisited), path:fMeet?buildPath(fMeet):[], meeting:fMeet, message:fMsg };
-    if (fMeet) {
-      yield { event:"solution", step, current:fMeet, frontVisited:new Set(frontVisited),
-              backVisited:new Set(backVisited), path:buildPath(fMeet), meeting:fMeet,
-              message:`Searches met at ${fMeet}.` };
-      return;
-    }
-
-    step++;
-    const [bNode, bMsg, bMeet] = expand(backQueue, backParent, backVisited, frontVisited, "Backward");
-    yield { event:"back_expand", step, current:bNode, frontVisited:new Set(frontVisited),
-            backVisited:new Set(backVisited), path:bMeet?buildPath(bMeet):[], meeting:bMeet, message:bMsg };
-    if (bMeet) {
-      yield { event:"solution", step, current:bNode, frontVisited:new Set(frontVisited),
-              backVisited:new Set(backVisited), path:buildPath(bMeet), meeting:bMeet,
-              message:`Searches met at ${bMeet}.` };
-      return;
-    }
-  }
-
-  yield { event:"no_path", step, current:null, frontVisited:new Set(frontVisited),
-          backVisited:new Set(backVisited), path:[], meeting:null,
+  yield { event:"no_path", step, current:null, frontVisited:new Set(visited),
+          backVisited:new Set(), path:[], meeting:null,
           message:"No route found between the selected nodes." };
 }
 
@@ -467,7 +451,7 @@ export default function RoutePage() {
     if (running || !startNode || !goalNode) return;
     resetState("Searching…");
     setStatusColor("#f59e0b");
-    traceRef.current = bidirectionalTrace(graph, startNode, goalNode);
+    traceRef.current = ucsTrace(graph, positions, startNode, goalNode);
     setRunning(true);
   };
 
@@ -521,7 +505,7 @@ export default function RoutePage() {
   return (
     <div className={styles.page}>
       <nav className={styles.navbar}>
-        <Link href="/day1" className={styles.backLink}>← Day 1</Link>
+        <Link href="/day2" className={styles.backLink}>← Day 2</Link>
         <span className={styles.pageTitle}>
           Route <span className={styles.pageTitleAccent}>Finder</span>
         </span>
@@ -543,7 +527,7 @@ export default function RoutePage() {
             onContextMenu={handleContextMenu}
           />
           <div className={styles.canvasLegend}>
-            Front: blue · Back: pink · Meeting: green · Route: gold<br/>
+            Frontier: blue · Path: gold · Drag nodes to see edge weights dynamically update!<br/>
             {modeHints[touchMode]}
           </div>
         </div>

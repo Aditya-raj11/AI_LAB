@@ -6,17 +6,17 @@ def manhattan(p, q):
 
 def best_first_search(grid, start, goal):
     rows, cols = len(grid), len(grid[0])
-    pq = []  # priority queue: stores (heuristic, (x, y))
-    heapq.heappush(pq, (manhattan(start, goal), start))
+    pq = []  # priority queue: stores (heuristic, tiebreaker, (x, y), path)
+    tiebreaker = 0
+    heapq.heappush(pq, (manhattan(start, goal), tiebreaker, start, [start]))
     
     visited = set()
-    parent = {}  # for reconstructing path
     
     # possible moves: up, down, left, right
     moves = [(1,0), (-1,0), (0,1), (0,-1)]
     
     while pq:
-        h, (x, y) = heapq.heappop(pq)
+        h, _, (x, y), path = heapq.heappop(pq)
         
         if (x, y) in visited:
             continue
@@ -25,22 +25,17 @@ def best_first_search(grid, start, goal):
         
         # Goal Found
         if (x, y) == goal:
-            # reconstruct path
-            path = []
-            while (x, y) != start:
-                path.append((x, y))
-                x, y = parent[(x, y)]
-            path.append(start)
-            return path[::-1], visited
+            return path, visited
         
         # Explore neighbors
         for dx, dy in moves:
             nx, ny = x + dx, y + dy
             
-            if 0 <= nx < rows and 0 <= ny < cols:
+            # Ensure within bounds and not an obstacle (0 = path, 1 = obstacle)
+            if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] == 0:
                 if (nx, ny) not in visited:
-                    parent[(nx, ny)] = (x, y)
-                    heapq.heappush(pq, (manhattan((nx, ny), goal), (nx, ny)))
+                    tiebreaker += 1
+                    heapq.heappush(pq, (manhattan((nx, ny), goal), tiebreaker, (nx, ny), path + [(nx, ny)]))
     
     return None, visited
 
@@ -50,7 +45,7 @@ def best_first_search(grid, start, goal):
 # ---------------------------
 grid = [
     [0, 0, 0, 0],
-    [0, 0, 0, 0],
+    [0, 1, 1, 0],
     [0, 0, 0, 0]
 ]
 
